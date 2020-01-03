@@ -1,0 +1,9 @@
+.lv_title {
+  font-size: unit(28,rpx);
+  color: #333;
+}
+
+.lv_text {
+  font-size: 22rpx;
+  color: #999;
+}
