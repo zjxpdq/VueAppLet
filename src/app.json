@@ -12,6 +12,11 @@
     "navigationBarTitleText": "微信小程序",
     "navigationBarTextStyle": "black"
   },
+  "permission": {
+    "scope.userLocation": {
+      "desc": "小程序需要获取您的当前位置"
+    }
+  },
   "tabBar": {
     "color": "#999",
     "backgroundColor": "#000",

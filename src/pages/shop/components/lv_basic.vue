@@ -1,77 +1,38 @@
 <template>
   <view class="lv_basic">
     <div class="lv_center">
-      <view class="logo-box">
-        <view>
-          <div class="lv_title">权益图片</div>
-          <div class="lv_text">请上传权益相关的图片。</div>
-        </view>
-        <view class="logo-img">
-          <upload-component @click="getStoreEntrancePic" :init="true"/>
-          <img :src="queryList.equityImage"/>
-        </view>
-      </view>
-      <div class="lv_title" style="margin-top: 40rpx;">权益名称</div>
+      <div class="lv_title" style="margin-top: 40rpx;">店铺名称</div>
       <div class="lv_input">
-        <input type="text" v-model="queryList.equityTitle" placeholder="请输入权益名称"/>
+        <input type="text" v-model="queryList.name" placeholder="请输入门店名称"/>
       </div>
-      <div class="lv_title lv_title_tab">
-        <em>是否有固定原价</em>
-        <view class="lv_btn_box">
-          <span :class="[{pitchOn: queryList.existPrice===0}]" @click="putAre(0)">是</span>
-          <span :class="[{pitchOn: queryList.existPrice===1}]" @click="putAre(1)">否</span>
-        </view>
+      <div class="lv_text">店铺名称在履约保小程序中展示。</div>
+      <div class="lv_title" style="margin-top: 40rpx;">行业</div>
+      <div class="lv_input">
+        <picker class="lv_picker" @change="changeInd" :value="ind" :range="indList.option">
+          <input type="text" v-model="product_desc" disabled="true" placeholder="请选择行业"/>
+        </picker>
       </div>
-      <div class="lv_text">有固定原价表示商品可明码标价，否则以实际消费金额为准。</div>
-      <div class="lv_pitch_box" v-if="queryList.existPrice===0">
-        <div class="lv_title">
-          <em>商品原价</em>
-          <div class="lv_input lv_end">
-            <input type="text" v-model="queryList.price" placeholder="请输入价格"/>
-            <em class="lv_end_text">元</em>
-          </div>
-        </div>
-        <div class="lv_title">
-          <em>其他平台竞价</em>
-          <div class="lv_input lv_end">
-            <input type="text" v-model="queryList.levelPrice" placeholder="请输入价格"/>
-            <em class="lv_end_text">元</em>
-          </div>
-        </div>
-        <div class="lv_text">表示顾客可在其他平台（团购平台等）购买的最低价格。</div>
-        <div class="lv_title">
-          <em>商家期望的平均价格</em>
-          <div class="lv_input lv_end">
-            <input type="text" v-model="queryList.expectPrice" placeholder="请输入平均价格"/>
-            <em class="lv_end_text">元</em>
-          </div>
-        </div>
-        <div class="lv_text">表示商家期望顾客每次履约的平均价格。</div>
+      <div class="lv_title" style="margin-top: 40rpx;">门店省市</div>
+      <div class="lv_input">
+        <picker class="lv_picker" mode="region" @change="changeRegion" :value="region">
+          <input type="text" v-model="regionText" disabled placeholder="请选择门店省市"/>
+        </picker>
       </div>
-      <div class="lv_pitch_box" v-if="queryList.existPrice===1">
-        <div class="lv_title">
-          <em>最低消费金额</em>
-          <div class="lv_input lv_end">
-            <input type="text" v-model="queryList.price" placeholder="请输入价格"/>
-            <em class="lv_end_text">元</em>
-          </div>
-        </div>
-        <div class="lv_title">
-          <em>其他平台最低折扣</em>
-          <div class="lv_input lv_end">
-            <input type="text" v-model="queryList.levelPrice" placeholder="请输入价格"/>
-            <em class="lv_end_text">元</em>
-          </div>
-        </div>
-        <div class="lv_text">有固定原价表示商品可明码标价，否则以实际消费金额为准。</div>
-        <div class="lv_title">
-          <em>商家期望的平均折扣</em>
-          <div class="lv_input lv_end">
-            <input type="text" v-model="queryList.expectPrice" placeholder="请输入平均价格"/>
-            <em class="lv_end_text">元</em>
-          </div>
-        </div>
-        <div class="lv_text">表示商家期望顾客每次履约的平均折扣。</div>
+      <div class="lv_title" style="margin-top: 40rpx;">详细地址</div>
+      <div class="lv_input">
+        <input type="text" v-model="queryList.detailAddress" placeholder="请输入详细地址"/>
+      </div>
+      <div class="lv_title" style="margin-top: 40rpx;">位置坐标</div>
+      <div class="lv_input" @click="onGetLocation">
+        <input class="lv_picker" type="text" v-model="store_street" disabled placeholder="请选择店铺位置坐标"/>
+      </div>
+      <div class="lv_title" style="margin-top: 40rpx;">位置备注</div>
+      <div class="lv_input">
+        <input type="text " v-model="queryList.addressMarks" placeholder="请输入店铺位置备注（非必填）"/>
+      </div>
+      <div class="lv_text">例：国际会展中心路口北400米。</div>
+      <div class="lv_text" style="color: #E56B65; text-align: center; margin-top: 40rpx; font-weight: bold;">
+        *以上资料设置后无法由商家自主修改，请仔细核对
       </div>
     </div>
 
@@ -88,66 +49,92 @@
     data () {
       return {
         queryList: {
-          equityImage: '', // (string, optional): 权益图片 ,
-          equityTitle: '', // (string, optional): 权益名称 ,
-          existPrice: 0, // (integer, optional): 是否设置原价0表示是 1表示否 ,
-          expectPrice: null, // (number, optional): existPrice为0表示期望平均价格 为1时表示期望平均折扣 ,
-          id: '', // (string, optional): 权益id ,
-          levelPrice: null, // (number, optional): 其他平台竞价/其它平台最低折扣 ,
-          price: null, // (number, optional): 商品原价/最低消费 ,
-          shopId: '' // (string, optional): 店铺id
+          province: '', // (string): 省份id ,
+          area: '', // (string): 区id ,
+          city: '', // (string): 城市id ,
+          companyId: '', // (string, optional): 企业id ,
+          detailAddress: '', // (string): 详细地址 ,
+          id: '', // (string, optional): 店铺id ,
+          location: '', // (string, optional): 详细地址经纬度 ,
+          name: '', // (string): 店铺名称 ,
+          addressMarks: '', // (string, optional): 位置备注 ,
+          shopTypeId: '' // (string): 行业id
         },
+        rule: {
+          name: { required: true, message: '店铺名称必须的' }, // (string): 店铺名称 ,
+          province: { required: true, message: '省份是必须的' }, // (string): 省份id ,
+          city: { required: true, message: '市是必须的' }, // (string): 城市id ,
+          detailAddress: { required: true, message: '详细地址是必须的' }, // (string): 详细地址 ,
+          location: { required: true, message: '坐标位置是必须的' }, // (string, optional): 详细地址经纬度 ,
+          shopTypeId: { required: true, message: '行业是必须的' } // (string): 行业id
+        },
+        indList: {
+          option: [],
+          list: []
+        }, // 行业数据
+        product_desc: '', // 显示行业
+        ind: 0, // 行业回显下标
+        region: [], // 回显城市
+        regionText: '', // 显示省市区
+        store_street: '', // 坐标位置
+
         WxValidate: null
       }
     },
     created () {
+      this.getShopType()
       this.initValidate()
     },
     methods: {
-      getStoreEntrancePic (data) {
-        this.queryList.equityImage = data.fileurl
-      },
-      putAre (val) {
-        this.queryList.expectPrice = null
-        this.queryList.levelPrice = null
-        this.queryList.price = null
-        this.queryList.existPrice = val
-      }, // 切换是 否
-      initValidate () {
-        this.WxValidate = new validate({
-          equityTitle: {
-            required: true,
-            message: '权益图片是必须的'
-          }/*,
-          equityTitle: {
-            required: true,
-            message: '权益名称是必须的'
-          },
-          existPrice: {
-            required: true,
-            message: '是否有原价是必须的'
-          },
-          expectPrice: {
-            required: true,
-            message: '期望平均价格是必须的'
-          },
-          levelPrice: {
-            required: true,
-            message: '商品原价/最低消费是必须的'
-          },
-          price: {
-            required: true
-          },
-          shopId: {
-            required: true
-          } */
+      getShopType () {
+        this.getRequest({
+          url: '/appequity/helperShop/getShopType',
+          data: {}
+        }).then(res => {
+          if (res.status === 200) {
+            this.indList = {
+              option: res.t.map(item => item.name),
+              list: res.t
+            }
+          }
         })
+      }, // 获取行业数据
+      changeInd (e) {
+        let data = this.indList.list[e.mp ? e.mp.detail.value : e]
+        this.queryList.shopTypeId = data.id
+        this.product_desc = data.name
+      }, // 选中的行业
+      changeRegion (e) {
+        let val = e.mp.detail
+        Object.assign(this.queryList, {
+          province: val.code[0], // (string): 省份id ,
+          city: val.code[1], // (string): 城市id ,
+          area: val.code[2] // (string): 区id ,
+        })
+        this.regionText = val.value.join(',')
+      }, // 选中的省市区
+      onGetLocation () {
+        let that = this
+        wx.chooseLocation({
+          success: function (res) {
+            if (res.errMsg === 'chooseLocation:ok') {
+              that.store_street = res.name
+              that.queryList.location = `${res.latitude},${res.longitude}`
+            }
+          }
+        })
+      }, // 位置坐标
+      initValidate () {
+        this.WxValidate = new validate(this.rule)
       },
       submit () {
-        this.WxValidate.checkForm(this.queryList).then(res => {
-          console.log(res)
-        }).catch(err => {
-          console.log(err)
+        this.WxValidate.checkForm(this.queryList).then(() => {
+          this.postRequest({
+            url: '/helperShop/insertShopOne',
+            data: this.queryList
+          }).then(res => {
+            console.log(res)
+          })
         })
       }
     },
@@ -209,7 +196,6 @@
         display: flex;
         justify-content: space-between;
         align-items: center;
-        margin-bottom: unit(16, rpx);
 
         .lv_btn_box {
           font-weight: normal;
@@ -231,6 +217,10 @@
             }
           }
         }
+      }
+
+      .lv_text {
+        margin-top: unit(16, rpx);
       }
 
       .lv_pitch_box {
