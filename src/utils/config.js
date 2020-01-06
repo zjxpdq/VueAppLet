@@ -3,7 +3,7 @@
 // 生成分支
 // const url = "https://api.lvyue8.com/api";
 // 本地分支
-const url = 'http://192.168.50.84:8080';
+const url = 'https://api.lvyue8.com/api'
 export default {
   url
 }

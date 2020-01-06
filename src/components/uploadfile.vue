@@ -3,7 +3,7 @@
 </template>
 
 <script>
-import httpRequest from '../utils/config.js'
+  import httpRequest from '../utils/config.js'
 
   export default {
     props: {
@@ -38,10 +38,20 @@ import httpRequest from '../utils/config.js'
                   success(ress) {
                     const data = JSON.parse(ress.data);
                     if (data.status === 200) {
-                      that.$emit('click', data.t);
-                      that.Toast(data.msg, 'success');
+                      that.$emit('click', data.t)
+                      wx.showToast({
+                        title: data.msg,
+                        icon: 'none',
+                        duration: 2000
+                      })
+                      // that.Toast(data.msg, 'success');
                     } else {
-                      that.Toast('上传失败~~  请稍后再试!');
+                      // that.Toast('上传失败~~  请稍后再试!');
+                      wx.showToast({
+                        title: data.msg,
+                        icon: 'none',
+                        duration: 2000
+                      })
                     }
                   }
                 })

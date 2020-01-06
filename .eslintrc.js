@@ -47,7 +47,7 @@ module.exports = {
     'no-dupe-keys': 2,//在创建对象字面量时不允许键重复 {a:1,a:1}
     'no-dupe-args': 2,//函数参数不能重复
     'no-duplicate-case': 2,//switch中的case标签不能重复
-    'no-else-return': 2,//如果if语句里面有return,后面不能跟else语句
+    'no-else-return': 0,//如果if语句里面有return,后面不能跟else语句
     'no-empty': 2,//块语句中的内容不能为空
     'no-empty-character-class': 2,//正则表达式中的[]内容不能为空
     'no-empty-label': 0,//禁止使用空label
@@ -161,7 +161,7 @@ module.exports = {
     'max-nested-callbacks': [0, 2],//回调嵌套深度
     'max-params': [0, 3],//函数最多只能有3个参数
     'max-statements': [0, 10],//函数内最多有几个声明
-    'new-cap': 2,//函数名首行大写必须使用new方式调用，首行小写必须用不带new方式调用
+    'new-cap': 0,//函数名首行大写必须使用new方式调用，首行小写必须用不带new方式调用
     'new-parens': 2,//new时必须加小括号
     'newline-after-var': 0,//变量声明后是否需要空一行
     'object-curly-spacing': [0, 'never'],//大括号内是否允许不必要的空格
@@ -197,7 +197,8 @@ module.exports = {
     'wrap-regex': 0,//正则表达式字面量用小括号包起来
     'yoda': [2, 'never'],//禁止尤达条件
     'no-self-assign': 0,
-    'no-useless-escape': 0
+    'no-useless-escape': 0,
+    'prefer-promise-reject-errors': 0
   },
   globals: {
     App: true,
