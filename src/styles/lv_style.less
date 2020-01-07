@@ -61,6 +61,23 @@
       border-bottom: none;
     }
   }
+
+  &.lv_end_arrows {
+    position: relative;
+    font-size: unit(28,rpx);
+
+    &::before {
+      content: '';
+      display: inline-block;
+      width: 32rpx;
+      height: 32rpx;
+      position: absolute;
+      right: 0;
+      top: 24rpx;
+      background: url('https://oss-zonda-lyb.oss-cn-shenzhen.aliyuncs.com/min_we_icon/sign_icon_arrow_gray_right%402x%402x.png') no-repeat;
+      background-size: 32rpx 32rpx;
+    }
+  }
 }
 
 .lv_footer_next_btn {
@@ -131,9 +148,49 @@
   background-size: 100% 100%;
 }
 
-.lv_pop_up_box {
+.lv_fixed_bottom_box {
+  width: 100%;
+  padding: 0 30rpx;
+  box-sizing: border-box;
+  background: #F9FAFB;
+  border-radius: 24rpx 24rpx 0 0;
   position: fixed;
-  height: 100vh;
-  width: 100vh;
-  background: #000;
+  left: 0;
+  bottom: 0;
+  z-index: -1;
+  transition: all .5s;
+  transform: translate3d(0, 100%, 0);
+
+  .lv_popup_title {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-top: 40rpx;
+    padding-bottom: 40rpx;
+
+    .cancel {
+      color: #999;
+      font-size: 28rpx;
+    }
+
+    .title {
+      font-size: 32rpx;
+      font-weight: bold;
+      color: rgba(51, 51, 51, 1);
+    }
+
+    .determine {
+      color: #118CFD;
+      font-size: 28rpx;
+      font-weight: bold;
+    }
+  }
+
+  .lv_popup_center {
+  }
+}
+
+.lv_show_popup {
+  z-index: 11;
+  transform: translate3d(0, 0, 0);
 }

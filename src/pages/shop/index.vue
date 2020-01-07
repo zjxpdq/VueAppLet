@@ -1,5 +1,5 @@
 <template>
-  <view class="lv_equity">
+  <view class="lv_equity" id="body">
     <lv-speed :index="speedIndex"></lv-speed>
     <view class="lv_content_box">
       <view class="lv_content">
@@ -23,6 +23,10 @@
         query: {
           id: '1210370501906530304', // 店铺ID
           companyId: '1210370501906530304' // 企业ID
+        },
+        title: {
+          0: '请填写店铺基本信息',
+          1: '请填写店铺基本信息'
         }
       }
     },
@@ -31,10 +35,18 @@
       LvBasic,
       LvDetail
     },
-    created () {},
+    created () {
+      this.putTitle(this.title[this.speedIndex])
+    },
     methods: {
       onNext (e) {
         this.speedIndex = e
+        this.putTitle(this.title[this.speedIndex])
+      },
+      putTitle (title) {
+        wx.setNavigationBarTitle({
+          title: title
+        })
       }
     },
     computed: {},

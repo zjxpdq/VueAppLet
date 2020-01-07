@@ -1,5 +1,6 @@
 <template>
   <view class="lv_detail">
+    <button @click="aa">dianji</button>
     <div class="lv_center">
       <div class="lv_up_logo_box">
         <div>
@@ -31,13 +32,26 @@
 
       <div class="lv_input_box">
         <div class="lv_title">营业时间</div>
+        <div class="lv_input lv_end_arrows" @click="openPopup('day')">
+          <input type="text" disabled v-model="daysText" placeholder="请选择营业时间"/>
+        </div>
+      </div>
+      <div class="lv_add_mobile lv_time_box">
         <div class="lv_input">
-          <input type="text" v-model="queryList.mobile" placeholder="请输入电话号码"/>
+          <picker class="lv_picker" mode="time" @change="getTime($event, 'B')">
+            <input type="text" v-model="BTime" disabled placeholder="开始时间"/>
+          </picker>
+        </div>
+        <div class="lv_line">-</div>
+        <div class="lv_input">
+          <picker class="lv_picker" mode="time" @change="getTime($event, 'E')">
+            <input type="text" v-model="ETime" disabled placeholder="结束时间"/>
+          </picker>
         </div>
       </div>
 
 
-      <div class="lv_title">行业</div>
+      <!--<div class="lv_title">行业</div>
       <div class="lv_input">
         <picker class="lv_picker" @change="changeInd" :value="ind" :range="indList.option">
           <input type="text" v-model="product_desc" disabled="true" placeholder="请选择行业"/>
@@ -64,11 +78,28 @@
       <div class="lv_text">例：国际会展中心路口北400米。</div>
       <div class="lv_text" style="color: #E56B65; text-align: center; margin-top: 40rpx; font-weight: bold;">
         *以上资料设置后无法由商家自主修改，请仔细核对
-      </div>
+      </div>-->
     </div>
 
-    <div class="lv_pop_up_box">
+    <bgfilter :show="popup === 'day'" @click="onClose"/>
 
+    <div :class="['lv_fixed_bottom_box', {'lv_show_popup': popup === 'day'}]">
+      <div class="lv_popup_title">
+        <div class="cancel" @click="onClose">取消</div>
+        <div class="title">选择营业时间</div>
+        <div class="determine" @click="onOk('day')">确定</div>
+      </div>
+      <div class="lv_popup_center">
+        <div :class="['lv_one_day', {'lv_pitch_on': allDays}]" @click="getDays('all')">每天</div>
+        <div class="lv_one_day_list">
+          <span
+            :class="{'lv_pitch_on': item.pitchOn}"
+            v-for="item of oneDay"
+            :key="item.dateId"
+            @click="getDays(item)"
+          >{{item.name}}</span>
+        </div>
+      </div>
     </div>
 
     <div :class="['lv_footer_next_btn', {'lv_pitch_on': !!getNext}]" @click="submit">下一步</div>
@@ -79,6 +110,7 @@
   import uploadComponent from './../../../components/uploadfile'
   import validate from '../../../utils/validate'
   import { mobile } from '../../../utils/verify'
+  import bgfilter from '../../../components/bgfilter'
 
   export default {
     name: 'lv_detail',
@@ -87,28 +119,63 @@
         queryList: {
           companyId: '', // (string, optional): 企业id ,
           id: '', // (string, optional): id ,
-          image: '', // (string): 店铺logo ,
+          image: '1232', // (string): 店铺logo ,
           introduce: '', // (string, optional): 店铺介绍 ,
           mobile: '', // (string): 店铺电话 ,
           notice: '', // (string, optional): 店铺标语 ,
           shopLabelList: [], // (Array[InsertShopLabelDTO]): 服务设施 ,
           shopMobileList: [], // (Array[InsertShopMobileDTO], optional): 服务电话、售后电话或其他电话 ,
-          time: '', // (string): 营业时间 格式（营业开始时间-营业结束时间） ,
+          time: [], // (string): 营业时间 格式（营业开始时间-营业结束时间） ,
           workDateList: [] // (Array[InsertWorkDateDTO]): 营业时间 周期
         },
         rule: {
           image: { required: true, message: '店铺logo必须的' }, // (string): 店铺logo ,
           mobile: { required: true, validator: mobile }, // (string): 店铺电话 ,
+          workDateList: { required: true, type: 'array', message: '营业时间是必须的' }, // (Array[InsertWorkDateDTO]): 营业时间 周期
+          time: { required: true, type: 'array', min: 2, message: '开始/结束时间是必须的' }, // 营业时间 格式（营业开始时间-营业结束时间）
           introduce: '', // (string, optional): 店铺介绍 ,
           shopLabelList: '', // (Array[InsertShopLabelDTO]): 服务设施 ,
-          shopMobileList: '', // (Array[InsertShopMobileDTO], optional): 服务电话、售后电话或其他电话 ,
-          time: '', // (string): 营业时间 格式（营业开始时间-营业结束时间） ,
-          workDateList: [] // (Array[InsertWorkDateDTO]): 营业时间 周期
+          shopMobileList: '' // (Array[InsertShopMobileDTO], optional): 服务电话、售后电话或其他电话 ,
         },
         mobileText: {
           0: '服务电话',
           2: '其他电话'
         },
+        popup: '',
+        dayList: [
+          {
+            dateId: 1,
+            name: '周一'
+          },
+          {
+            dateId: 2,
+            name: '周二'
+          },
+          {
+            dateId: 3,
+            name: '周三'
+          },
+          {
+            dateId: 4,
+            name: '周四'
+          },
+          {
+            dateId: 5,
+            name: '周五'
+          },
+          {
+            dateId: 6,
+            name: '周六'
+          },
+          {
+            dateId: 7,
+            name: '周日'
+          }
+        ],
+        allDays: false,
+        daysText: '',
+        BTime: '',
+        ETime: '',
 
         indList: {
           option: [],
@@ -153,7 +220,46 @@
       delMobile (type) {
         this.queryList.shopMobileList = this.queryList.shopMobileList.filter(item => item.type !== type)
       }, // 删除备用号码
+      getDays (type) {
+        if (type === 'all') {
+          this.allDays = !this.allDays
+          this.queryList.workDateList = []
+        } else {
+          this.allDays = false
+          this.queryList.workDateList.push(type)
+        }
+      }, // 获取每天数据
+      onClose () {
+        this.popup = ''
+      }, // 点击弹窗取消
+      onOk (type) {
+        this.onClose()
+        switch (type) {
+          case 'day':
+            if (this.allDays) {
+              this.daysText = '每天'
+            } else {
+              this.daysText = this.queryList.workDateList.map(item => item.name).join('，')
+            }
+            break
+          case 'cc':
+            break
+        }
+      }, // 点击弹窗确认键
+      openPopup (type) {
+        this.popup = type
+      }, // 打开弹窗
+      getTime (e, type) {
+        this.queryList.time[type === 'B' ? 0 : 1] = e.mp.detail.value
+        let time = this.queryList.time
+        this.BTime = time[0]
+        this.ETime = time[1]
+      }, // 点击确定获取时间
 
+
+      close () {
+        console.log('c')
+      },
       getShopType () {
         this.getRequest({
           url: '/appequity/helperShop/getShopType',
@@ -213,7 +319,8 @@
       }
     },
     components: {
-      uploadComponent
+      uploadComponent,
+      bgfilter
     },
     computed: {
       getNext () {
@@ -224,6 +331,13 @@
       },
       shopMobileList () {
         return this.queryList.shopMobileList
+      },
+      oneDay () {
+        let on = this.queryList.workDateList.map(item => item.name)
+        return this.dayList.map(item => {
+          item.pitchOn = on.includes(item.name)
+          return item
+        })
       }
     },
     mounted () {},
@@ -270,6 +384,54 @@
           justify-content: center;
           align-items: center;
           margin-right: unit(24, rpx);
+        }
+
+        &.lv_time_box {
+          align-items: center;
+
+          .lv_line {
+            margin: 0 unit(18, rpx);
+            color: #333;
+          }
+
+          .lv_picker::before {
+            transform: rotate(90deg);
+          }
+        }
+      }
+    }
+
+    .lv_popup_center {
+      .lv_one_day {
+        height: unit(80, rpx);
+        line-height: unit(80, rpx);
+        text-align: center;
+        background: #fff;
+        border-radius: unit(8, rpx);
+        font-weight: bold;
+        font-size: unit(28, rpx);
+      }
+
+      .lv_pitch_on {
+        background: #E8F4FF !important;
+        color: #118CFD;
+      }
+
+      .lv_one_day_list {
+        padding: unit(40, rpx) 0;
+        margin: 0 unit(-8, rpx);
+
+        span {
+          width: unit(160, rpx);
+          height: unit(80, rpx);
+          display: inline-block;
+          background: #fff;
+          border-radius: unit(8, rpx);
+          line-height: unit(80, rpx);
+          text-align: center;
+          font-weight: bold;
+          font-size: unit(28, rpx);
+          margin: unit(8, rpx);
         }
       }
     }
