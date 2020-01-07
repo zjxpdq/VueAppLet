@@ -50,17 +50,6 @@
       background-size: 32rpx 32rpx;
     }
   }
-
-  &.lv_end_del {
-    border-bottom: 1px solid #E8E8E8;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-
-    input {
-      border-bottom: none;
-    }
-  }
 }
 
 .lv_footer_next_btn {
@@ -129,11 +118,4 @@
   height: 32rpx;
   background: url('https://oss-zonda-lyb.oss-cn-shenzhen.aliyuncs.com/min_we_icon/sign_icon_delete%402x.png') no-repeat;
   background-size: 100% 100%;
-}
-
-.lv_pop_up_box {
-  position: fixed;
-  height: 100vh;
-  width: 100vh;
-  background: #000;
 }

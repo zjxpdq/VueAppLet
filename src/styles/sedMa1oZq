@@ -2,13 +2,11 @@
   font-size: unit(28,rpx);
   color: #333;
   font-weight: bold;
-  margin-top: 40rpx;
 }
 
 .lv_text {
   font-size: unit(22,rpx);
   color: #999;
-  margin-top: unit(16,rpx);
 }
 
 .lv_input {
@@ -50,17 +48,6 @@
       background-size: 32rpx 32rpx;
     }
   }
-
-  &.lv_end_del {
-    border-bottom: 1px solid #E8E8E8;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-
-    input {
-      border-bottom: none;
-    }
-  }
 }
 
 .lv_footer_next_btn {
@@ -96,44 +83,4 @@
     height: 100%;
     object-fit: cover;
   }
-}
-
-.lv_input_box {
-  width: 100%;
-  display: flex;
-  margin-top: 40rpx;
-
-  .lv_title {
-    margin-top: 16rpx;
-    width: 112rpx;
-  }
-
-  .lv_input {
-    flex: 1;
-    margin-left: 24rpx;
-  }
-}
-
-.lv_min_add_icon {
-  display: inline-block;
-  width: 32rpx;
-  height: 32rpx;
-  background: url('https://oss-zonda-lyb.oss-cn-shenzhen.aliyuncs.com/min_we_icon/sign_icon_add_black%402x.png') no-repeat;
-  background-size: 100% 100%;
-  margin-right: 8rpx;
-}
-
-.lv_del_icon {
-  display: inline-block;
-  width: 32rpx;
-  height: 32rpx;
-  background: url('https://oss-zonda-lyb.oss-cn-shenzhen.aliyuncs.com/min_we_icon/sign_icon_delete%402x.png') no-repeat;
-  background-size: 100% 100%;
-}
-
-.lv_pop_up_box {
-  position: fixed;
-  height: 100vh;
-  width: 100vh;
-  background: #000;
 }

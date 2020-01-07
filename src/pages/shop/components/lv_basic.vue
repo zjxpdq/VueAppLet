@@ -1,32 +1,32 @@
 <template>
   <view class="lv_basic">
     <div class="lv_center">
-      <div class="lv_title" style="margin-top: 40rpx;">店铺名称</div>
+      <div class="lv_title">店铺名称</div>
       <div class="lv_input">
         <input type="text" v-model="queryList.name" placeholder="请输入门店名称"/>
       </div>
       <div class="lv_text">店铺名称在履约保小程序中展示。</div>
-      <div class="lv_title" style="margin-top: 40rpx;">行业</div>
+      <div class="lv_title">行业</div>
       <div class="lv_input">
         <picker class="lv_picker" @change="changeInd" :value="ind" :range="indList.option">
           <input type="text" v-model="product_desc" disabled="true" placeholder="请选择行业"/>
         </picker>
       </div>
-      <div class="lv_title" style="margin-top: 40rpx;">门店省市</div>
+      <div class="lv_title">门店省市</div>
       <div class="lv_input">
         <picker class="lv_picker" mode="region" @change="changeRegion" :value="region">
           <input type="text" v-model="regionText" disabled placeholder="请选择门店省市"/>
         </picker>
       </div>
-      <div class="lv_title" style="margin-top: 40rpx;">详细地址</div>
+      <div class="lv_title">详细地址</div>
       <div class="lv_input">
         <input type="text" v-model="queryList.detailAddress" placeholder="请输入详细地址"/>
       </div>
-      <div class="lv_title" style="margin-top: 40rpx;">位置坐标</div>
+      <div class="lv_title">位置坐标</div>
       <div class="lv_input" @click="onGetLocation">
         <input class="lv_picker" type="text" v-model="store_street" disabled placeholder="请选择店铺位置坐标"/>
       </div>
-      <div class="lv_title" style="margin-top: 40rpx;">位置备注</div>
+      <div class="lv_title">位置备注</div>
       <div class="lv_input">
         <input type="text " v-model="queryList.addressMarks" placeholder="请输入店铺位置备注（非必填）"/>
       </div>
@@ -41,7 +41,6 @@
 </template>
 
 <script>
-  import uploadComponent from './../../../components/uploadfile'
   import validate from '../../../utils/validate'
 
   export default {
@@ -77,13 +76,26 @@
         region: [], // 回显城市
         regionText: '', // 显示省市区
         store_street: '', // 坐标位置
-
         WxValidate: null
       }
     },
+    props: {
+      query: {
+        type: Object,
+        default () {
+          return {}
+        }
+      }
+    },
+    watch: {
+      query () {
+        Object.assign(this.queryList, this.query)
+      }
+    },
     created () {
-      this.getShopType()
+      Object.assign(this.queryList, this.query)
       this.initValidate()
+      this.getShopType()
     },
     methods: {
       getShopType () {
@@ -130,17 +142,21 @@
       submit () {
         this.WxValidate.checkForm(this.queryList).then(() => {
           this.postRequest({
-            url: '/helperShop/insertShopOne',
+            url: '/appequity/helperShop/insertShopOne',
             data: this.queryList
           }).then(res => {
+            if (res.status === 200) {
+              this.$emit('on-next', 1)
+            } else {
+              this.Toast(res.t.msg)
+            }
+
             console.log(res)
           })
         })
       }
     },
-    components: {
-      uploadComponent
-    },
+    components: {},
     computed: {
       getNext () {
         return this.WxValidate.ext(this.queryList)
@@ -156,43 +172,13 @@
   @import "./../../../styles/lv_style.less";
 
   .lv_basic {
-    height: 100%;
     width: 100%;
-    position: relative;
 
     .lv_center {
-      padding: unit(40, rpx) unit(40, rpx) 0;
+      padding: unit(1, rpx) unit(40, rpx) 0;
 
       .lv_title {
         margin-top: unit(40, rpx);
-      }
-
-      .logo-box {
-        display: flex;
-        justify-content: space-between;
-
-        .lv_title {
-          margin-bottom: unit(16, rpx);
-          margin-top: 0;
-        }
-
-        .logo-img {
-          width: unit(160, rpx);
-          height: unit(160, rpx);
-          background: url('https://oss-zonda-lyb.oss-cn-shenzhen.aliyuncs.com/min_we_icon/sign_icon_add%402x%402x%20%281%29.png') no-repeat center center;
-          background-size: unit(80, rpx) unit(80, rpx);
-          border: 1px solid #E8E8E8;
-          position: relative;
-
-          img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-          }
-        }
-      }
-
-      .lv_title {
         display: flex;
         justify-content: space-between;
         align-items: center;

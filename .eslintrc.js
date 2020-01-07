@@ -198,7 +198,9 @@ module.exports = {
     'yoda': [2, 'never'],//禁止尤达条件
     'no-self-assign': 0,
     'no-useless-escape': 0,
-    'prefer-promise-reject-errors': 0
+    'prefer-promise-reject-errors': 0,
+    'no-mixed-operators': 0,
+    'callback-return': 0
   },
   globals: {
     App: true,

@@ -3,7 +3,8 @@
     <lv-speed :index="speedIndex"></lv-speed>
     <view class="lv_content_box">
       <view class="lv_content">
-        <lv-basic></lv-basic>
+        <lv-basic :query="query" v-if="speedIndex === 0" @on-next="onNext"></lv-basic>
+        <lv-detail :query="query" v-else-if="speedIndex === 1" @on-next="onNext"></lv-detail>
       </view>
     </view>
   </view>
@@ -12,20 +13,30 @@
 <script>
   import LvSpeed from './../../components/speed'
   import LvBasic from './components/lv_basic'
+  import LvDetail from './components/lv_detail'
 
   export default {
     name: 'lv_equity',
     data () {
       return {
-        speedIndex: 0
+        speedIndex: 1,
+        query: {
+          id: '1210370501906530304', // 店铺ID
+          companyId: '1210370501906530304' // 企业ID
+        }
       }
     },
     components: {
       LvSpeed,
-      LvBasic
+      LvBasic,
+      LvDetail
     },
     created () {},
-    methods: {},
+    methods: {
+      onNext (e) {
+        this.speedIndex = e
+      }
+    },
     computed: {},
     mounted () {},
     destroyed () {}
@@ -35,10 +46,9 @@
 <style scoped lang="less">
   .lv_equity {
     background: #118CFD;
-    height: 100vh;
+    min-height: 100vh;
 
     .lv_content_box {
-      height: calc(100vh - 88rpx);
       padding: 0 unit(32, rpx) unit(58, rpx);
       box-sizing: border-box;
 

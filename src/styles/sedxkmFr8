@@ -56,7 +56,6 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-
     input {
       border-bottom: none;
     }
@@ -132,8 +131,5 @@
 }
 
 .lv_pop_up_box {
-  position: fixed;
-  height: 100vh;
-  width: 100vh;
-  background: #000;
+  
 }
