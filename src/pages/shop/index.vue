@@ -5,6 +5,7 @@
       <view class="lv_content">
         <lv-basic :query="query" v-if="speedIndex === 0" @on-next="onNext"></lv-basic>
         <lv-detail :query="query" v-else-if="speedIndex === 1" @on-next="onNext"></lv-detail>
+        <lv-license :query="query" v-else-if="speedIndex === 2" @on-next="onNext"></lv-license>
       </view>
     </view>
   </view>
@@ -14,26 +15,29 @@
   import LvSpeed from './../../components/speed'
   import LvBasic from './components/lv_basic'
   import LvDetail from './components/lv_detail'
+  import LvLicense from './components/lv_license'
 
   export default {
     name: 'lv_equity',
     data () {
       return {
-        speedIndex: 1,
+        speedIndex: 2,
         query: {
           id: '1210370501906530304', // 店铺ID
           companyId: '1210370501906530304' // 企业ID
         },
         title: {
           0: '请填写店铺基本信息',
-          1: '请填写店铺基本信息'
+          1: '请填写店铺基本信息',
+          2: '请完成营业执照认证'
         }
       }
     },
     components: {
       LvSpeed,
       LvBasic,
-      LvDetail
+      LvDetail,
+      LvLicense
     },
     created () {
       this.putTitle(this.title[this.speedIndex])

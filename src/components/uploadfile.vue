@@ -1,4 +1,5 @@
-﻿<template>
+﻿﻿
+<template>
   <div class="uploadWrap" @click="uploadImg"></div>
 </template>
 
@@ -8,7 +9,17 @@
   export default {
     props: {
       type: Number,
-      init: Boolean
+      init: Boolean,
+      config: {
+        type: Object,
+        default () {
+          return {
+            count: 1,
+            sizeType: ['original', 'compressed'],
+            sourceType: ['album', 'camera']
+          }
+        }
+      }
     },
 
     methods: {
@@ -21,26 +32,34 @@
         }).then(res => {
           if (res.status === 200) {
             success_token = JSON.parse(res.t).access_token;
-            wx.chooseImage({
+            const config = {
               count: 1,
               sizeType: ['original', 'compressed'],
               sourceType: ['album', 'camera'],
               success: function (resc) {
                 // console.log(res)
-                const resfile = resc.tempFiles[0].path;
-                const url1 = `${httpRequest.url}/appequity/jinjian/ocr/${that.type}?accessTokens=${success_token}`;
-                const url2 = `${httpRequest.url}/appequity/jinjian/wxUpload`;
-                wx.showLoading();
+                const resfile = resc.tempFiles[0].path
+                const url1 = `${httpRequest.url}/appequity/jinjian/ocr/${that.type}?accessTokens=${success_token}`
+                const url2 = `${httpRequest.url}/appequity/jinjian/wxUpload`
+                wx.showLoading()
                 wx.uploadFile({
                   url: !that.init ? url1 : url2,
                   filePath: resfile,
                   name: 'file',
-                  success(ress) {
-                    const data = JSON.parse(ress.data);
+                  success (ress) {
+                    const data = JSON.parse(ress.data)
+                    console.log(data)
                     if (data.status === 200) {
                       that.$emit('click', data.t)
+                      let msg = ''
+                      try {
+                        msg = data.t.t.errmsg || data.msg
+                      } catch (e) {
+                        msg = data.msg
+                        console.log(e)
+                      }
                       wx.showToast({
-                        title: data.msg,
+                        title: msg,
                         icon: 'none',
                         duration: 2000
                       })
@@ -56,7 +75,9 @@
                   }
                 })
               }
-            })
+            }
+            Object.assign(config, that.config)
+            wx.chooseImage(config)
           }
         })
       }

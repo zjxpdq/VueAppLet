@@ -1,4 +1,4 @@
-function formatNumber (n) {
+export function formatNumber (n) {
   const str = n.toString()
   return str[1] ? str : `0${str}`
 }
@@ -18,7 +18,24 @@ export function formatTime (date) {
   return `${t1} ${t2}`
 }
 
-export default {
-  formatNumber,
-  formatTime
+export const forEachs = (arr, fn) => {
+  if (!arr.length || !fn) {
+    return
+  }
+  let i = -1
+  let len = arr.length
+  while (++i < len) {
+    let item = arr[i]
+    fn(item, i, arr)
+  }
+}
+
+/**
+ * 深拷贝
+ * @param obj
+ * @return
+ */
+export const deepClone = obj => {
+  let _obj = JSON.stringify(obj)
+  return JSON.parse(_obj)
 }

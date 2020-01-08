@@ -148,10 +148,8 @@
             if (res.status === 200) {
               this.$emit('on-next', 1)
             } else {
-              this.Toast(res.t.msg)
+              this.Toast(res.msg)
             }
-
-            console.log(res)
           })
         })
       }
