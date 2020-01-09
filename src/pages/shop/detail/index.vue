@@ -1,117 +1,122 @@
 <template>
-  <view class="lv_detail">
-    <div class="lv_center">
-      <div class="lv_up_logo_box">
-        <div>
-          <div class="lv_title">店铺logo</div>
-          <div class="lv_text">请上传店铺logo或门店招牌照片。</div>
-        </div>
-        <div class="lv_add_img">
-          <upload-component @click="getImage" :init="true"/>
-          <img v-if="queryList.image" :src="queryList.image"/>
-        </div>
-      </div>
-      <div class="lv_input_box">
-        <div class="lv_title">店铺电话</div>
-        <div class="lv_input">
-          <input type="text" v-model="queryList.mobile" placeholder="请输入电话号码"/>
-        </div>
-      </div>
-      <div class="lv_input_box" v-for="(item, index) of shopMobileList" :key="index">
-        <div class="lv_title">{{mobileText[item.type]}}</div>
-        <div class="lv_input lv_end_del">
-          <input type="text" v-model="item.mobile" placeholder="请输入电话号码"/>
-          <span class="lv_del_icon" @click="delMobile(item.mobile)"></span>
-        </div>
-      </div>
-      <div class="lv_add_mobile" v-if="showMobileBtn">
-        <span @click="addMobile(0)"><i class="lv_min_add_icon"></i>服务电话</span>
-        <span @click="addMobile(2)"><i class="lv_min_add_icon"></i>其它电话</span>
-      </div>
-      <div class="lv_input_box">
-        <div class="lv_title">营业时间</div>
-        <div class="lv_input lv_end_arrows" @click="openPopup('day')">
-          <input type="text" disabled v-model="daysText" placeholder="请选择营业时间"/>
-        </div>
-      </div>
-      <div class="lv_add_mobile lv_time_box">
-        <div class="lv_input">
-          <picker class="lv_picker" mode="time" @change="getTime($event, 'B')">
-            <input type="text" v-model="BTime" disabled placeholder="开始时间"/>
-          </picker>
-        </div>
-        <div class="lv_line">-</div>
-        <div class="lv_input">
-          <picker class="lv_picker" mode="time" @change="getTime($event, 'E')">
-            <input type="text" v-model="ETime" disabled placeholder="结束时间"/>
-          </picker>
-        </div>
-      </div>
-      <div class="lv_title lv_title_end_btn">
-        <span>服务设施</span>
-        <em @click="openPopup('int')">自定义</em>
-      </div>
-      <div class="lv_int_list">
+  <view class="lv_shops_box">
+    <lv-speed :index="1"></lv-speed>
+    <view class="lv_content_box">
+      <view class="lv_content">
+        <div class="lv_center">
+          <div class="lv_up_logo_box">
+            <div>
+              <div class="lv_title">店铺logo</div>
+              <div class="lv_text">请上传店铺logo或门店招牌照片。</div>
+            </div>
+            <div class="lv_add_img">
+              <upload-component @click="getImage" :init="true"/>
+              <img v-if="queryList.image" :src="queryList.image"/>
+            </div>
+          </div>
+          <div class="lv_input_box">
+            <div class="lv_title">店铺电话</div>
+            <div class="lv_input">
+              <input type="text" v-model="queryList.mobile" placeholder="请输入电话号码"/>
+            </div>
+          </div>
+          <div class="lv_input_box" v-for="(item, index) of shopMobileList" :key="index">
+            <div class="lv_title">{{mobileText[item.type]}}</div>
+            <div class="lv_input lv_end_del">
+              <input type="text" v-model="item.mobile" placeholder="请输入电话号码"/>
+              <span class="lv_del_icon" @click="delMobile(item.mobile)"></span>
+            </div>
+          </div>
+          <div class="lv_add_mobile" v-if="showMobileBtn">
+            <span @click="addMobile(0)"><i class="lv_min_add_icon"></i>服务电话</span>
+            <span @click="addMobile(2)"><i class="lv_min_add_icon"></i>其它电话</span>
+          </div>
+          <div class="lv_input_box">
+            <div class="lv_title">营业时间</div>
+            <div class="lv_input lv_end_arrows" @click="openPopup('day')">
+              <input type="text" disabled v-model="daysText" placeholder="请选择营业时间"/>
+            </div>
+          </div>
+          <div class="lv_add_mobile lv_time_box">
+            <div class="lv_input">
+              <picker class="lv_picker" mode="time" @change="getTime($event, 'B')">
+                <input type="text" v-model="BTime" disabled placeholder="开始时间"/>
+              </picker>
+            </div>
+            <div class="lv_line">-</div>
+            <div class="lv_input">
+              <picker class="lv_picker" mode="time" @change="getTime($event, 'E')">
+                <input type="text" v-model="ETime" disabled placeholder="结束时间"/>
+              </picker>
+            </div>
+          </div>
+          <div class="lv_title lv_title_end_btn">
+            <span>服务设施</span>
+            <em @click="openPopup('int')">自定义</em>
+          </div>
+          <div class="lv_int_list">
         <span
           v-for="(item, index) of intListDom"
           :key="index"
           :class="{'lv_pitch_on': item.pitchOn}"
           @click="intOperate('pitch', item.labelName)"
         >{{item.labelName}}</span>
-      </div>
-      <div class="lv_title">店铺标语</div>
-      <div class="lv_input">
-        <input type="text" v-model="queryList.notice" placeholder="请输入店铺标语（非必填）"/>
-      </div>
-      <div class="lv_text">例：新店开张，全场5折。</div>
-      <div class="lv_title">店铺介绍</div>
-      <div class="lv_input">
-        <input type="text" v-model="queryList.introduce" placeholder="请输入店铺介绍"/>
-      </div>
-      <div class="lv_text">
-        例：广州苏格拉邸酒店公寓位于广州市黄埔区大型商业中心敏捷广场（地铁21号线水西站），在黄埔区政府中心位置，地段繁华，距离宝能（广州）国际体育演艺中心1.5公里，距离万达广场只有一个地铁站（开车车程5分钟），附近有创业公园、儿童公园、市民广场、羊城八景“萝岗香雪公园”等，还有高德汇等大型商业中心。交通便利，地段繁华。本酒店致力于为顾客提供舒适、优雅、干净的休憩环境，非常适合商务出差、同伴出游及居家旅行居住，给顾客带来如同居家般的舒适感受！
-      </div>
-    </div>
+          </div>
+          <div class="lv_title">店铺标语</div>
+          <div class="lv_input">
+            <input type="text" v-model="queryList.notice" placeholder="请输入店铺标语（非必填）"/>
+          </div>
+          <div class="lv_text">例：新店开张，全场5折。</div>
+          <div class="lv_title">店铺介绍</div>
+          <div class="lv_input">
+            <input type="text" v-model="queryList.introduce" placeholder="请输入店铺介绍"/>
+          </div>
+          <div class="lv_text">
+            例：广州苏格拉邸酒店公寓位于广州市黄埔区大型商业中心敏捷广场（地铁21号线水西站），在黄埔区政府中心位置，地段繁华，距离宝能（广州）国际体育演艺中心1.5公里，距离万达广场只有一个地铁站（开车车程5分钟），附近有创业公园、儿童公园、市民广场、羊城八景“萝岗香雪公园”等，还有高德汇等大型商业中心。交通便利，地段繁华。本酒店致力于为顾客提供舒适、优雅、干净的休憩环境，非常适合商务出差、同伴出游及居家旅行居住，给顾客带来如同居家般的舒适感受！
+          </div>
+        </div>
 
-    <bgfilter :show="popup === 'day' || popup === 'int'" @click="onClose"/>
+        <bgfilter :show="popup === 'day' || popup === 'int'" @click="onClose"/>
 
-    <div :class="['lv_fixed_bottom_box', {'lv_show_popup': popup === 'day'}]">
-      <div class="lv_popup_title">
-        <div class="cancel" @click="onClose">取消</div>
-        <div class="title">选择营业时间</div>
-        <div class="determine" @click="onOk('day')">确定</div>
-      </div>
-      <div class="lv_popup_center">
-        <div :class="['lv_one_day', {'lv_pitch_on': allDays}]" @click="getDays('all')">每天</div>
-        <div class="lv_one_day_list">
+        <div :class="['lv_fixed_bottom_box', {'lv_show_popup': popup === 'day'}]">
+          <div class="lv_popup_title">
+            <div class="cancel" @click="onClose">取消</div>
+            <div class="title">选择营业时间</div>
+            <div class="determine" @click="onOk('day')">确定</div>
+          </div>
+          <div class="lv_popup_center">
+            <div :class="['lv_one_day', {'lv_pitch_on': allDays}]" @click="getDays('all')">每天</div>
+            <div class="lv_one_day_list">
           <span
             :class="{'lv_pitch_on': item.pitchOn}"
             v-for="(item, index) of oneDay"
             :key="index"
             @click="getDays(item)"
           >{{item.name}}</span>
-        </div>
-      </div>
-    </div>
-
-    <div :class="['lv_fixed_bottom_box', {'lv_show_popup': popup === 'int'}]">
-      <div class="lv_popup_title">
-        <div class="cancel" @click="intOperate('close')">取消</div>
-        <div class="title">自定义服务设施</div>
-        <div class="determine" @click="intOperate('save')">保存</div>
-      </div>
-      <div class="lv_popup_center">
-        <div class="lv_new_int">
-          <div class="lv_input lv_end_del" v-for="(item, index) of newIntDom" :key="index" v-if="!item.del">
-            <input type="text" v-model="item.labelName" placeholder="请输入服务设施"/>
-            <span class="lv_del_icon" @click="intOperate('del', item.labelName)"></span>
+            </div>
           </div>
-          <p @click="intOperate('new')"><em>+</em>添加新服务设施</p>
         </div>
-      </div>
-    </div>
 
-    <div :class="['lv_footer_next_btn', {'lv_pitch_on': !!getNext}]" @click="submit">下一步</div>
+        <div :class="['lv_fixed_bottom_box', {'lv_show_popup': popup === 'int'}]">
+          <div class="lv_popup_title">
+            <div class="cancel" @click="intOperate('close')">取消</div>
+            <div class="title">自定义服务设施</div>
+            <div class="determine" @click="intOperate('save')">保存</div>
+          </div>
+          <div class="lv_popup_center">
+            <div class="lv_new_int">
+              <div class="lv_input lv_end_del" v-for="(item, index) of newIntDom" :key="index" v-if="!item.del">
+                <input type="text" v-model="item.labelName" placeholder="请输入服务设施"/>
+                <span class="lv_del_icon" @click="intOperate('del', item.labelName)"></span>
+              </div>
+              <p @click="intOperate('new')"><em>+</em>添加新服务设施</p>
+            </div>
+          </div>
+        </div>
+
+        <div :class="['lv_footer_next_btn', {'lv_pitch_on': !!getNext}]" @click="submit">下一步</div>
+      </view>
+    </view>
   </view>
 </template>
 
@@ -121,9 +126,10 @@
   import { mobile } from '../../../utils/verify'
   import bgfilter from '../../../components/bgfilter'
   import { deepClone, forEachs } from '../../../utils'
+  import LvSpeed from './../../../components/speed'
 
   export default {
-    name: 'lv_detail',
+    name: 'lv_shops_box',
     data () {
       const shopMobileList = (rule, value, callback) => {
         if (value.length > 0) {
@@ -212,21 +218,13 @@
         WxValidate: null
       }
     },
-    props: {
-      query: {
-        type: Object,
-        default () {
-          return {}
-        }
-      }
-    },
-    watch: {
-      query () {
-        Object.assign(this.queryList, this.query)
-      }
+    onLoad (query) {
+      Object.assign(this.queryList, {
+        companyId: query.shopId,
+        id: query.shopId
+      })
     },
     created () {
-      Object.assign(this.queryList, this.query)
       this.initValidate()
       this.getIntList()
     },
@@ -373,7 +371,7 @@
             data: params
           }).then(res => {
             if (res.status === 200) {
-              this.$emit('on-next', 2)
+              wx.navigateTo({ url: `../license/main?shopId=${this.queryList.companyId}` })
             } else {
               this.Toast(res.msg)
             }
@@ -383,7 +381,8 @@
     },
     components: {
       uploadComponent,
-      bgfilter
+      bgfilter,
+      LvSpeed
     },
     computed: {
       getNext () {
@@ -412,17 +411,14 @@
       newIntDom () {
         return this.newInt
       }
-    },
-    mounted () {},
-    beforeDestroy () {},
-    destroyed () {}
+    }
   }
 </script>
 
 <style scoped lang="less">
-  @import "./../../../styles/lv_style.less";
+  @import url('../../../styles/lv_style.less');
 
-  .lv_detail {
+  .lv_shops_box .lv_content_box .lv_content {
     height: 100%;
     width: 100%;
     position: relative;

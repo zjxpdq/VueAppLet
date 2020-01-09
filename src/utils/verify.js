@@ -55,7 +55,7 @@ export const price = (rule, value, callback) => {
 export const PRICE = (rule, value, callback) => {
   if (!value) {
     callback(new Error('价格是必须的'))
-  } else if (!/^([1-9]\d{2,5}|1000)$/.test(value)) {
+  } else if (!/^([1-9]\d{1,5}|1000)$/.test(value)) {
     callback(new Error('价格在10-1000内'))
   } else {
     callback()
@@ -63,6 +63,7 @@ export const PRICE = (rule, value, callback) => {
 }
 // 1-9.9 整数 或 1-9.9 保留 1 位小数
 export const OneToNine = /^[1-9](\.\d{1})?$/
+
 // 验证价格在1-9.9内
 export const RATE = (rule, value, callback) => {
   if (!value && value !== 0) {

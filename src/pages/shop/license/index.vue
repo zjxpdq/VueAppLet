@@ -1,50 +1,55 @@
 <template>
-  <view class="lv_license">
-    <div class="lv_center">
-      <div class="lv_up_permit_box">
-        <div class="lv_title">
-          <em>营业执照正面照片</em>
-          <div class="lv_camera_icon">
-            <upload-component
-              @click="getImage"
-              :config="{count: 1, sizeType: ['original'],sourceType: ['camera']}"
-              type="3"
-            />
+  <view class="lv_shops_box">
+    <lv-speed :index="2"></lv-speed>
+    <view class="lv_content_box">
+      <view class="lv_content">
+        <div class="lv_center">
+          <div class="lv_up_permit_box">
+            <div class="lv_title">
+              <em>营业执照正面照片</em>
+              <div class="lv_camera_icon">
+                <upload-component
+                  @click="getImage"
+                  :config="{count: 1, sizeType: ['original'],sourceType: ['camera']}"
+                  type="3"
+                />
+              </div>
+            </div>
+
+            <div :class="['lv_add_img', {'bg000': !!queryList.busImage}]">
+              <upload-component @click="getImage" type="3"/>
+              <img v-if="queryList.busImage" mode="aspectFit" :src="queryList.busImage"/>
+            </div>
+          </div>
+          <div class="lv_text">请上传清晰的彩色照片。</div>
+          <div class="lv_title">企业名称</div>
+          <div class="lv_input">
+            <input type="text" v-model="queryList.companyName" placeholder="请输入营业执照上的企业名称"/>
+          </div>
+          <div class="lv_title">统一社会信用代码</div>
+          <div class="lv_input">
+            <input type="text" v-model="queryList.qyCode" placeholder="请输入统一社会信用代码"/>
+          </div>
+          <div class="lv_title">履约保服务费率</div>
+          <div class="lv_input">
+            <picker class="lv_picker" @change="changeRate" :value="index" :range="ratedList">
+              <input type="text" v-model="ratedText" disabled placeholder="请选择履约保服务费率"/>
+            </picker>
           </div>
         </div>
-
-        <div :class="['lv_add_img', {'bg000': !!queryList.busImage}]">
-          <upload-component @click="getImage" type="3"/>
-          <img v-if="queryList.busImage" mode="aspectFit" :src="queryList.busImage"/>
-        </div>
-      </div>
-      <div class="lv_text">请上传清晰的彩色照片。</div>
-      <div class="lv_title">企业名称</div>
-      <div class="lv_input">
-        <input type="text" v-model="queryList.companyName" placeholder="请输入营业执照上的企业名称"/>
-      </div>
-      <div class="lv_title">统一社会信用代码</div>
-      <div class="lv_input">
-        <input type="text" v-model="queryList.qyCode" placeholder="请输入统一社会信用代码"/>
-      </div>
-      <div class="lv_title">履约保服务费率</div>
-      <div class="lv_input">
-        <picker class="lv_picker" @change="changeRate" :value="index" :range="ratedList">
-          <input type="text" v-model="ratedText" disabled placeholder="请选择履约保服务费率"/>
-        </picker>
-      </div>
-    </div>
-
-    <div :class="['lv_footer_next_btn', {'lv_pitch_on': !!getNext}]" @click="submit">完成</div>
+        <div :class="['lv_footer_next_btn', {'lv_pitch_on': !!getNext}]" @click="submit">完成</div>
+      </view>
+    </view>
   </view>
 </template>
 
 <script>
   import validate from '../../../utils/validate'
   import uploadComponent from '../../../components/uploadfile'
+  import LvSpeed from './../../../components/speed'
 
   export default {
-    name: 'lv_license',
+    name: 'lv_shops_box',
     data () {
       const qyCode = (r, v, c) => {
         if (!v) {
@@ -76,27 +81,13 @@
         WxValidate: null
       }
     },
-    props: {
-      query: {
-        type: Object,
-        default () {
-          return {}
-        }
-      }
-    },
-    watch: {
-      query () {
-        Object.assign(this.queryList, {
-          companyId: this.query.companyId,
-          shopId: this.query.id
-        })
-      }
+    onLoad (query) {
+      Object.assign(this.queryList, {
+        companyId: query.shopId,
+        shopId: query.shopId
+      })
     },
     created () {
-      Object.assign(this.queryList, {
-        companyId: this.query.companyId,
-        shopId: this.query.id
-      })
       this.initValidate()
     },
     methods: {
@@ -124,7 +115,6 @@
         this.ratedText = val
         console.log(e.mp.detail.value)
       },
-
       initValidate () {
         this.WxValidate = new validate(this.rule)
       },
@@ -135,7 +125,7 @@
             data: this.queryList
           }).then(res => {
             if (res.status === 200) {
-              this.$emit('on-next', 3)
+              wx.navigateTo({ url: `../success/main?shopId=${this.queryList.companyId}` })
             } else {
               this.Toast(res.msg)
             }
@@ -144,23 +134,21 @@
       }
     },
     components: {
-      uploadComponent
+      uploadComponent,
+      LvSpeed
     },
     computed: {
       getNext () {
         return this.WxValidate.ext(this.queryList)
       } // 获取实时验证结果
-    },
-    mounted () {},
-    beforeDestroy () {},
-    destroyed () {}
+    }
   }
 </script>
 
 <style scoped lang="less">
-  @import "./../../../styles/lv_style.less";
+  @import url('../../../styles/lv_style.less');
 
-  .lv_license {
+  .lv_shops_box .lv_content_box .lv_content {
     height: 100%;
     width: 100%;
     position: relative;
