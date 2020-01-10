@@ -24,7 +24,7 @@
             <div class="lv_title">{{mobileText[item.type]}}</div>
             <div class="lv_input lv_end_del">
               <input type="text" v-model="item.mobile" placeholder="请输入电话号码"/>
-              <span class="lv_del_icon" @click="delMobile(item.mobile)"></span>
+              <span class="lv_del_icon" @click="delMobile(index)"></span>
             </div>
           </div>
           <div class="lv_add_mobile" v-if="showMobileBtn">
@@ -87,12 +87,12 @@
           <div class="lv_popup_center">
             <div :class="['lv_one_day', {'lv_pitch_on': allDays}]" @click="getDays('all')">每天</div>
             <div class="lv_one_day_list">
-          <span
-            :class="{'lv_pitch_on': item.pitchOn}"
-            v-for="(item, index) of oneDay"
-            :key="index"
-            @click="getDays(item)"
-          >{{item.name}}</span>
+              <span
+                :class="{'lv_pitch_on': item.pitchOn}"
+                v-for="(item, index) of oneDay"
+                :key="index"
+                @click="getDays(item)"
+              >{{item.name}}</span>
             </div>
           </div>
         </div>
@@ -223,10 +223,10 @@
         companyId: query.shopId,
         id: query.shopId
       })
+      this.getIntList()
+      this.initValidate()
     },
     created () {
-      this.initValidate()
-      this.getIntList()
     },
     methods: {
       getImage (val) {
@@ -239,7 +239,7 @@
         })
       }, // 增加备用电话号码
       delMobile (type) {
-        this.queryList.shopMobileList = this.queryList.shopMobileList.filter(item => item.mobile !== type)
+        this.queryList.shopMobileList.splice(type, 1)
       }, // 删除备用号码
       getDays (type) {
         if (type === 'all') {
@@ -247,7 +247,12 @@
           this.queryList.workDateList = ['每天']
         } else {
           this.allDays = false
-          this.queryList.workDateList.push(type)
+          let li = this.queryList.workDateList.filter(item => item !== '每天')
+          if (li.map(item => item.name).includes(type.name)) {
+            this.queryList.workDateList = li.filter(item => item.name !== type.name)
+          } else {
+            this.queryList.workDateList.push(type)
+          }
         }
       }, // 获取每天数据
       onClose () {
@@ -260,6 +265,7 @@
             if (this.allDays) {
               this.daysText = '每天'
             } else {
+              this.queryList.workDateList = this.queryList.workDateList.filter(item => item !== '每天')
               this.daysText = this.queryList.workDateList.map(item => item.name).join('，')
             }
             break
@@ -355,16 +361,18 @@
         this.WxValidate = new validate(this.rule)
       },
       submit () {
+        let params = deepClone(this.queryList)
         if (this.allDays) {
-          this.queryList.workDateList = deepClone(this.dayList).map(item => {
+          params.workDateList = []
+          params.workDateList = deepClone(this.dayList).map(item => {
             return {
               dateId: item.dateId, // (string, optional): 周几 数字表示 ,
               name: item.name // (string, optional): 周几 文字表示
             }
           })
         }
-        this.WxValidate.checkForm(this.queryList).then(() => {
-          let params = deepClone(this.queryList)
+        console.log(params)
+        this.WxValidate.checkForm(params).then(() => {
           params.time = params.time.join(',')
           this.postRequest({
             url: '/appequity/helperShop/insertShopTwo',

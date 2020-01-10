@@ -89,10 +89,10 @@
         companyId: query.shopId,
         id: query.shopId
       })
+      this.getShopType()
+      this.initValidate()
     },
     created () {
-      this.initValidate()
-      this.getShopType()
     },
     methods: {
       getShopType () {

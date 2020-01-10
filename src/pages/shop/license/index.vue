@@ -86,9 +86,9 @@
         companyId: query.shopId,
         shopId: query.shopId
       })
+      this.initValidate()
     },
     created () {
-      this.initValidate()
     },
     methods: {
       getImage (e) {

@@ -111,9 +111,9 @@
         shopId: query.shopId,
         id: query.shopId
       })
+      this.initValidate()
     },
     created () {
-      this.initValidate()
     },
     methods: {
       getStoreEntrancePic (data) {
