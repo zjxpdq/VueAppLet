@@ -1,9 +1,9 @@
 {
   "pages": [
-    "pages/shop/detail/main",
     "pages/equity/detail/main",
     "pages/equity/basic/main",
     "pages/shop/basic/main",
+    "pages/shop/detail/main",
     "pages/shop/license/main",
     "pages/shop/success/main",
 

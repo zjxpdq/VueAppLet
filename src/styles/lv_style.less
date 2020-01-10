@@ -20,6 +20,23 @@
   color: #333;
   font-weight: bold;
   margin-top: 40rpx;
+
+  &.lv_title_down_icon {
+    position: relative;
+
+    &::after {
+      content: '';
+      display: inline-block;
+      width: 32rpx;
+      height: 32rpx;
+      position: absolute;
+      right: 0;
+      top: 0;
+      background: url('https://oss-zonda-lyb.oss-cn-shenzhen.aliyuncs.com/min_we_icon/sign_icon_arrow_gray_right%402x%402x.png') no-repeat;
+      background-size: 32rpx 32rpx;
+      transform: rotate(90deg);
+    }
+  }
 }
 
 .lv_text {
