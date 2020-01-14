@@ -1,7 +1,8 @@
 {
   "pages": [
-    "pages/equity/detail/main",
+    "pages/equity/license/main",
     "pages/equity/basic/main",
+    "pages/equity/detail/main",
     "pages/shop/basic/main",
     "pages/shop/detail/main",
     "pages/shop/license/main",

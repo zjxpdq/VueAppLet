@@ -57,19 +57,20 @@
           <div class="lv_title">
             折扣力度
             <span
-              v-if="item.sizeObject.three > 6 && item.sizeObject.three !== '不限'"
+              v-if="item.sizeObject.three >= 6 && item.sizeObject.three !== '不限'"
               @click="cutBtn('boxCut', index, !item.cut)"
               style="color: #118CFD;"><i
-              class="lv_del_icon"></i>{{!item.cut ? '快捷设置' : '按次设置'}}</span>
+              class="lv_vigor_icon"></i>{{!item.cut ? '快捷设置' : '按次设置'}}</span>
           </div>
           <!-- 折扣设置 -->
           <vigor
-            :value="item.equityCountDTOS"
+            v-model="item.equityCountDTOS"
             :cut-status="item.cut"
             :count="item.sizeObject.three"
             :box-index="numZh[index]"
             :price="price"
             ref="vigor"
+            :key="index"
           />
           <!-- 限制设置 -->
           <div
@@ -167,9 +168,9 @@
 
 <script>
   import LvSpeed from './../../../components/speed'
-  import validate from '../../../utils/validate'
   import vigor from './vigor'
-  import { forEachs } from '../../../utils'
+  import { deepClone, forEachs } from '../../../utils'
+  import schema from 'async-validator'
 
   export default {
     name: 'lv_shops_box',
@@ -186,14 +187,7 @@
                 time: ''
               }, // (string, optional): 权益活动截止时间 ,
               delayStatus: 0, // (integer, optional): 延期状态0发起自动通过1发起需要商户统一 ,
-              equityCountDTOS: [
-                /* {
-                   discount: '', // (number, optional): 折扣 ,
-                   price: '', // (number, optional): 折扣后价格 ,
-                   size: '', // (integer, optional): 权益使用次数默认0 ,
-                   weight: '' // (integer, optional): 顺序
-                 } */
-              ], // (Array[权益明细次数入场封装], optional),
+              equityCountDTOS: [], // (Array[权益明细次数入场封装], optional),
               equityId: '', // (string, optional): 权益主表id ,
               integral: 100, // (integer, optional): 履约积分要求 ,
               level: 1, // (integer, optional): 履约等级要求 ,
@@ -228,6 +222,48 @@
           medalLevelText: { 1: '纳税A级企业专属优惠（暂未开放）' }
         },
         price: 100, // 商品原价
+        rule: new schema({
+          sizeObject: {
+            type: 'object',
+            required: true,
+            fields: {
+              one: {
+                required: true,
+                validator: (rules, value, callback) => {
+                  if (!value) {
+                    callback(new Error('天数或者月数是必须的'))
+                  } else if (!/[0-9]/.test(value)) {
+                    callback(new Error('天数或者月数必须是数字'))
+                  } else if (value < 1) {
+                    callback(new Error('天数或者月数不能小于1天'))
+                  } else {
+                    callback()
+                  }
+                }
+              },
+              three: { required: true, message: '消费次数是必须的' }
+            }
+          },
+          delayStatus: { required: true, type: 'number', message: '客户发起延期时是必选的' }, // (integer, optional): 延期状态0发起自动通过1发起需要商户统一 ,
+          integral: { required: true, type: 'number', message: '履约积分要求是必须的' }, // (integer, optional): 履约积分要求 ,
+          level: { required: true, type: 'number', message: '履约积分要求是必须的' }, // (integer, optional): 履约等级要求 ,
+          rescissionStatus: { required: true, type: 'number', message: '客户发起解约时是必须的' }
+        }),
+        ruleChild: new schema({
+          discount: {
+            required: true,
+            validator: (rules, value, callback) => {
+              if (!value) {
+                callback(new Error('权益明细折扣是必须的'))
+              } else if (!OneToNine.test(value)) {
+                callback(new Error('请输入合理的折扣'))
+              } else {
+                callback()
+              }
+            }
+          }
+        }),
+        msg: [],
 
         BTime: null
       }
@@ -238,81 +274,82 @@
         list.push(i)
       }
       this.options.countList = list
-
       Object.assign(this.queryList, {
         shopId: query.shopId,
         id: query.shopId
       })
-      // this.initValidate()
+    },
+    watch: {
+      queryList: {
+        handler () {
+          this.verification()
+        },
+        deep: true
+      }
     },
     methods: {
-      initValidate () {
-        let rule = {}
-        let list = this.queryList.equityDetailDTOS
-        forEachs(list, (item, index) => {
-          let countDTOS = {}
-          forEachs(item.equityCountDTOS, (child, k) => {
-            countDTOS[k] = {
-              type: 'object',
-              fields: {
-                discount: {
-                  required: true,
-                  validator: (rules, value, callback) => {
-                    if (!value && value !== 0) {
-                      callback(new Error(`方案${this.numZh[index]} 的有未填写的折扣`))
-                    } else if (!OneToNine.test(value)) {
-                      callback(new Error(`方案${this.numZh[index]} 的有不合理的折扣`))
-                    } else {
-                      callback()
-                    }
-                  }
-                }
-              }
+      asyncValidator (type, data) {
+        return new Promise((resolve) => {
+          let obj = { type: true }
+          this[type].validate(data).then(() => {
+            obj.type = true
+            resolve(obj)
+          }).catch(({ errors }) => {
+            if (errors) {
+              obj.type = false
+              obj.message = errors[0].message
+            } else {
+              obj.type = true
             }
+            resolve(obj)
           })
-
-          rule[index] = {
-            type: 'object',
-            fields: {
-              sizeObject: {
-                required: true,
-                type: 'object',
-                fields: {
-                  one: {
-                    required: true,
-                    validator: (rules, value, callback) => {
-                      if (!value) {
-                        callback(new Error(`${item.sizeObject.two === '天' ? '天数' : '月数'}是必须的`))
-                      } else if (value < 1) {
-                        callback(new Error(`${item.sizeObject.two === '天' ? '天数' : '月数'}不能小于1`))
-                      } else {
-                        callback()
-                      }
-                    }
-                  },
-                  two: { required: true, message: '单位是必须的' },
-                  three: { required: true, message: '次数是必须的' }
-                }
-              }, // (object, optional),
-              delayStatus: { required: true, type: 'number', message: '客户发起延期时是必选的' }, // (integer, optional): 延期状态0发起自动通过1发起需要商户统一 ,
-              equityCountDTOS: { required: true, type: 'array', fields: countDTOS }, // (Array[权益明细次数入场封装], optional),
-              integral: { required: true, type: 'number', message: '履约积分要求是必须的' }, // (integer, optional): 履约积分要求 ,
-              level: { required: true, type: 'number', message: '履约积分要求是必须的' }, // (integer, optional): 履约等级要求 ,
-              rescissionStatus: { required: true, type: 'number', message: '客户发起解约时是必须的' } // (integer, optional): 解约状态0发起自动解约1发起需要商户统一当次数不限次数时默认0 ,
-
-            }
+        })
+      }, // 验证
+      verification () {
+        this.msg = []
+        forEachs(this.queryList.equityDetailDTOS, item => {
+          this.asyncValidator('rule', item).then(res => {
+            this.msg.push(res)
+          })
+          if (item.equityCountDTOS) {
+            forEachs(item.equityCountDTOS, child => {
+              this.asyncValidator('ruleChild', child).then(res => {
+                this.msg.push(res)
+              })
+            })
           }
         })
-        this.WxValidate = new validate(rule)
-      },
+      }, // 验证
+
       submit () {
-        this.initValidate()
-        console.log(this.queryList.equityDetailDTOS)
-        this.WxValidate.checkForm(this.queryList.equityDetailDTOS).then(() => {
-          this.$refs.vigor[0].vali().then(res => {
-            console.log(res)
+        if (this.getNext) {
+          let params = deepClone(this.queryList)
+          params.equityDetailDTOS = params.equityDetailDTOS.map(item => {
+            this.$delete(item, 'cut')
+            this.$delete(item, 'openLimit')
+            item.activityTime = item.activityTime.date && item.activityTime.time ?
+              `${item.activityTime.date} ${item.activityTime.time}` : ''
+            item.size = `${item.sizeObject.one}${item.sizeObject.two}${item.sizeObject.three}次`
+            return item
           })
-        })
+          this.postRequest({
+            url: '/appequity/helperEquity/addEquityTwo',
+            data: params
+          }).then(res => {
+            if (res.status === 200) {
+              wx.navigateTo({ url: `../license/main?shopId=${this.queryList.companyId}` })
+            } else {
+              this.Toast(res.msg)
+            }
+          })
+        } else {
+          forEachs(this.msg, item => {
+            if (!item.type) {
+              this.Toast(item.message)
+              return false
+            }
+          })
+        }
       },
       onPicker (e, type, index) {
         switch (type) {
@@ -321,35 +358,9 @@
             break
           case 'cont':
             let val = this.options.countList[e.mp.detail.value]
-            let obj = {
-              sizeObject: {},
-              cut: false,
-              equityCountDTOS: []
-            }
-            Object.assign(obj.sizeObject, this.queryList.equityDetailDTOS[index].sizeObject)
-            obj.sizeObject['three'] = val.toString()
-            if (val === '不限') {
-              obj.cut = true
-              obj.equityCountDTOS = [
-                {
-                  discount: '', // (number, optional): 折扣 ,
-                  price: '', // (number, optional): 折扣后价格 ,
-                  size: '', // (integer, optional): 权益使用次数默认0 ,
-                  weight: '' // (integer, optional): 顺序
-                }
-              ]
-            } else {
-              obj.cut = false
-              for (let i = 0; i < val; i++) {
-                obj.equityCountDTOS.push({
-                  discount: '', // (number, optional): 折扣 ,
-                  price: '', // (number, optional): 折扣后价格 ,
-                  size: 1, // (integer, optional): 权益使用次数默认0 ,
-                  weight: i + 1 // (integer, optional): 顺序
-                })
-              }
-            }
-            Object.assign(this.queryList.equityDetailDTOS[index], obj)
+            this.queryList.equityDetailDTOS[index].sizeObject['three'] = val.toString()
+            let status = val === '不限' ? true : val <= 6 ? false : this.queryList.equityDetailDTOS[index].cut
+            this.queryList.equityDetailDTOS[index].cut = status
             break
           case 'level':
             this.queryList.equityDetailDTOS[index].level = e.mp.detail.value + 1
@@ -373,9 +384,6 @@
             this.queryList.equityDetailDTOS[index].medalLevel = e.mp.detail.value + 1
             break
         }
-
-        console.log(e)
-        console.log(type)
       }, // 下拉选中
       delBtn (type, e) {
         switch (type) {
@@ -389,25 +397,27 @@
         switch (type) {
           case 'box':
             this.queryList.equityDetailDTOS.push({
-              activityTime: '', // (string, optional): 权益活动截止时间 ,
-              delayStatus: '', // (integer, optional): 延期状态0发起自动通过1发起需要商户统一 ,
-              equityCountDTOS: [
-                {
-                  discount: '', // (number, optional): 折扣 ,
-                  price: '', // (number, optional): 折扣后价格 ,
-                  size: '', // (integer, optional): 权益使用次数默认0 ,
-                  weight: '' // (integer, optional): 顺序
-                }
-              ], // (Array[权益明细次数入场封装], optional),
+              cut: false, // cut (true) 表示开启快捷设置
+              openLimit: false, // true 表示打开限制设置
+              activityTime: {
+                date: '',
+                time: ''
+              }, // (string, optional): 权益活动截止时间 ,
+              delayStatus: 0, // (integer, optional): 延期状态0发起自动通过1发起需要商户统一 ,
+              equityCountDTOS: [], // (Array[权益明细次数入场封装], optional),
               equityId: '', // (string, optional): 权益主表id ,
-              integral: '', // (integer, optional): 履约积分要求 ,
-              level: '', // (integer, optional): 履约等级要求 ,
+              integral: 100, // (integer, optional): 履约积分要求 ,
+              level: 1, // (integer, optional): 履约等级要求 ,
               medalLevel: '', // (integer, optional): 勋章要求0表示无要求1表示必须是A级纳税企业 ,
-              number: '', // (integer, optional): 领取数量上限 ,
-              realNumber: '', // (integer, optional): 实际领取数量 ,
-              rescissionStatus: '', // (integer, optional): 解约状态0发起自动解约1发起需要商户统一当次数不限次数时默认0 ,
+              number: null, // (integer, optional): 领取数量上限 ,
+              realNumber: null, // (integer, optional): 实际领取数量 ,
+              rescissionStatus: 0, // (integer, optional): 解约状态0发起自动解约1发起需要商户统一当次数不限次数时默认0 ,
               size: '', // (string, optional): 权益消费周期 譬如：一個月3次 ,
-              sizeObject: {}, // (object, optional),
+              sizeObject: {
+                one: null,
+                two: '天',
+                three: ''
+              }, // (object, optional),
               status: '', // (integer, optional): 权益履约方案状态 0未变更 1已变更 -1不可领取 ,
               weight: '' // (integer, optional): 权益明细顺序
             })
@@ -432,11 +442,93 @@
     },
     computed: {
       getNext () {
-        this.initValidate()
-        return this.WxValidate.ext(this.queryList.equityDetailDTOS)
+        let flag = false
+        forEachs(this.msg, item => {
+          if (!item.type) {
+            flag = false
+            return false
+          } else {
+            flag = true
+            return false
+          }
+        })
+        return flag
       },
       equityList () {
         return this.queryList.equityDetailDTOS
+      },
+      getRule () {
+        let rule = {
+          equityDetailDTOS: {
+            required: true,
+            type: 'array',
+            fields: {}
+          }
+        }
+        let list = this.queryList.equityDetailDTOS
+        forEachs(list, (item, index) => {
+          rule.equityDetailDTOS.fields[index] = {
+            required: true,
+            type: 'object',
+            fields: {
+              sizeObject: {
+                type: 'object',
+                required: true,
+                fields: {
+                  one: {
+                    required: true,
+                    validator: (rules, value, callback) => {
+                      if (!value) {
+                        callback(new Error('天数或者月数是必须的'))
+                      } else if (!/[0-9]/.test(value)) {
+                        callback(new Error('天数或者月数必须是数字'))
+                      } else if (value < 1) {
+                        callback(new Error('天数或者月数不能小于1天'))
+                      } else {
+                        callback()
+                      }
+                    }
+                  },
+                  three: { required: true, message: '消费次数是必须的' }
+                }
+              },
+              equityCountDTOS: {
+                required: true,
+                type: 'array',
+                fields: {}
+              }, // (Array[权益明细次数入场封装], optional),
+              delayStatus: { required: true, type: 'number', message: '客户发起延期时是必选的' }, // (integer, optional): 延期状态0发起自动通过1发起需要商户统一 ,
+              integral: { required: true, type: 'number', message: '履约积分要求是必须的' }, // (integer, optional): 履约积分要求 ,
+              level: { required: true, type: 'number', message: '履约积分要求是必须的' }, // (integer, optional): 履约等级要求 ,
+              rescissionStatus: { required: true, type: 'number', message: '客户发起解约时是必须的' }
+            }
+          }
+          if (item.equityCountDTOS.length > 0) {
+            forEachs(item.equityCountDTOS, (child, k) => {
+              rule.equityDetailDTOS.fields[index].fields.equityCountDTOS.fields[k] = {
+                required: true,
+                type: 'object',
+                fields: {
+                  required: true,
+                  type: 'number',
+                  discount: {
+                    required: true,
+                    validator: (rules, value, callback) => {
+                      if (!value) {
+                        callback(new Error('权益明细折扣是必须的'))
+                      } else if (!OneToNine.test(value)) {
+                        callback(new Error('请输入合理的折扣'))
+                      } else {
+                        callback()
+                      }
+                    }
+                  }
+                }
+              }
+            })
+          }
+        })
+        return rule
       }
     },
     mounted () {},

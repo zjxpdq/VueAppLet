@@ -25,7 +25,8 @@ class Validate {
     return new Promise((resolve, reject) => {
       this.validator.validate(data).then(() => {
         resolve(true)
-      }).catch(({ errors }) => {
+      }).catch(({ errors, fields }) => {
+        console.log(fields)
         if (!toast) {
           wx.showToast({
             title: errors[0]['message'],

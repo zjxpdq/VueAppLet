@@ -4,53 +4,60 @@
     <div
       class="lv_vigor_num"
       v-if="!cutStatus"
-      v-for="(num, numIndex) of value"
-      :key="numIndex"
+      v-for="(num, index) of list"
+      :key="index"
     >
       <div class="lv_num_left">
-        <span>第<em>{{numIndex + 1}}</em>次：</span>
+        <span>第<em>{{index + 1}}</em>次：</span>
         <div class="lv_input">
-          <input type="number" @change="keyupUnt(numIndex, num.discount)" v-model="num.discount" placeholder="请输入"/>
+          <input type="number" @change="keyupUnt(index, num.discount)" v-model="num.discount" placeholder="请输入"/>
         </div>
         <span>折</span>
       </div>
-      <div class="lv_num_right" v-if="price">{{num.price || 0}} 元</div>
+      <div class="lv_num_right">{{num.price || '0.00'}} 元</div>
     </div>
 
     <!-- 快捷设置 -->
     <div
       class="lv_vigor_cut"
       v-if="cutStatus"
-      v-for="(item, index) of cutDomList"
+      v-for="(item, index) of list"
       :key="index"
     >
       <div class="lv_cut_left">
-        <span>第<em>{{item.B}}</em>次 - </span>
+        <span>第<em>{{setText['B' + index]}}</em>次 - </span>
         <div class="lv_input lv_cut_input">
           <picker
             class="lv_picker"
             @change="onPicker($event, index, options[index])"
             :range="options[index]"
-            v-if="index < 2"
+            v-if="setText['IS' + index]"
           >
-            <input type="text" :value="item.E ? '第' + item.E + '次' : ''" disabled placeholder="请选择">
+            <input type="text" :value="item.size ? '第' + setText['E' + index] + '次' : ''" disabled placeholder="请选择">
           </picker>
-          <input v-if="index >= 2" type="text" :value="item.E ? item.E : ''" disabled placeholder="请选择">
+          <input
+            v-else type="text"
+            :value="item.size ? item.size === -1 ?setText['E' + index] : '第' + setText['E' + index] + '次' : ''"
+            disabled
+            placeholder="请选择">
         </div>
         <div class="lv_input">
-          <input type="text" v-model="item.discount" @change="keyupUnt(index, item.discount, 'cut')" placeholder="请输入"/>
+          <input
+            type="text"
+            v-model="item.discount"
+            @change="keyupUnt(index, item.discount)"
+            placeholder="请输入"/>
         </div>
         <span>折</span>
       </div>
-      <div class="lv_num_right" v-if="price">{{item.price || 0}} 元</div>
+      <div class="lv_num_right" v-if="price">{{item.price || '0.00'}} 元</div>
     </div>
   </div>
 </template>
 
 <script>
 
-  import { countRate, deepClone, forEachs } from '../../../utils'
-  import validate from '../../../utils/validate'
+  import { countRate, deepClone, forEachs, isNumber } from '../../../utils'
 
   const OneToNine = /^[1-9](\.\d{1})?$/
 
@@ -58,125 +65,100 @@
     name: 'vigor',
     data () {
       return {
-        item: {
-          discount: '', // (number, optional): 折扣 ,
-          price: '', // (number, optional): 折扣后价格 ,
-          size: '', // (integer, optional): 权益使用次数默认0 ,
-          weight: '' // (integer, optional): 顺序
-        },
-        cutDomList: [
-          {
-            B: '1',
-            E: '',
-            price: '',
-            discount: ''
-          }
-        ],
+        cutDomList: [],
         options: {
           0: []
-        },
-        newValue: []
+        }
       }
     },
     props: {
       value: Array,
-      cutStatus: Boolean, // 快捷设置还是次数设置
+      cutStatus: Boolean, // 快捷设置还是次数设置 true 为快捷设置
       count: [Number, String], // 总条数
-      price: [Number, String], // 商品原价
+      price: [Number, String, Object], // 商品原价
       boxIndex: String // 方案几
     },
     watch: {
+      value: {},
       count () {
-        if (this.cutStatus) {
-          this.cutInit()
+        if (this.count) {
+          this.setList()
         }
       },
-      cutStatus (to) {
-        if (to) {
-          this.cutInit()
-        }
-      },
-      value: {
-        handler (to) {
-          let flag = false
-          if (to) {
-            forEachs(to, item => {
-              if (item.size && item.size !== 1) {
-                flag = true
-                return false
-              }
-            })
-            if (flag) {
-              console.log(flag)
-              this.cutInit('init')
-            }
-          }
-        },
-        deep: true
+      cutStatus () {
+        this.setList()
       },
       cutDomList: {
         handler () {
-          if (this.cutStatus) {
-            let list = deepClone(this.cutDomList)
-            let newList = []
-            forEachs(list, (item, i) => {
-              if (!item.E) {
-                this.Toast(`方案${this.boxIndex} 的快捷设置有未选择结尾次数，请核查！`)
-              }
-              newList[i] = {
-                discount: item.discount, // (number, optional): 折扣 ,
-                price: item.price, // (number, optional): 折扣后价格 ,
-                size: i <= 1 ? item.E - item.B + 1 : this.count === '不限' ? -1 : this.count - item.B + 1, // (integer, optional): 权益使用次数默认0 ,
-                weight: i + 1 // (integer, optional): 顺序
-              }
-              /* Object.assign(this.newValue[i], {
-                 discount: item.discount, // (number, optional): 折扣 ,
-                 price: item.price, // (number, optional): 折扣后价格 ,
-                 size: i <= 1 ? item.E - item.B + 1 : this.count === '不限' ? -1 : this.count - item.B + 1, // (integer, optional): 权益使用次数默认0 ,
-                 weight: i + 1 // (integer, optional): 顺序
-               }) */
-            })
-            this.newValue = newList
-          }
+          let list = deepClone(this.cutDomList)
+          let newList = []
+          forEachs(list, (item, i) => {
+            newList[i] = {
+              discount: item.discount, // (number, optional): 折扣 ,
+              price: item.price, // (number, optional): 折扣后价格 ,
+              size: i <= 1 ? item.E - item.B + 1 : this.count === '不限' ? -1 : this.count - item.B + 1, // (integer, optional): 权益使用次数默认0 ,
+              weight: i + 1 // (integer, optional): 顺序
+            }
+          })
+          this.putValue = newList
         },
         deep: true
       }
     },
     methods: {
-      keyupUnt (index, discount, type) {
+      setList () {
+        let cut = this.cutStatus
+        if (cut) {
+          this.getOptions(0)
+          this.putValue = [
+            {
+              discount: '', // (number, optional): 折扣 ,
+              price: '', // (number, optional): 折扣后价格 ,
+              size: null, // (integer, optional): 权益使用次数默认0 ,
+              weight: 1 // (integer, optional): 顺序
+            }
+          ]
+        } else {
+          let num = this.count === '不限' ? 50 : isNumber(this.count)
+          let arr = []
+          for (let i = 0; i < num; i++) {
+            arr.push({
+              discount: '', // (number, optional): 折扣 ,
+              price: '', // (number, optional): 折扣后价格 ,
+              size: 1, // (integer, optional): 权益使用次数默认0 ,
+              weight: i + 1 // (integer, optional): 顺序
+            })
+          }
+          this.putValue = arr
+        }
+      }, // 获取列表
+      keyupUnt (index, discount) {
         if (!discount && discount !== 0) {
           this.Toast('折扣是必须的')
         } else if (!OneToNine.test(discount)) {
           this.Toast('请输入合理的折扣')
         } else if (!this.price) {
           return false
-        } else if (type === 'cut') {
-          this.cutDomList[index].price = countRate(this.price, discount)
         } else {
-          this.newValue[index].price = countRate(this.price, discount)
+          this.putValue[index].price = countRate(this.price, discount)
         }
       }, // 获取折后价格
-      cutInit (type) {
+      cutInit () {
         this.cutDomList = [{ B: '1', E: '', price: '', discount: '' }] // 初始化快捷设置项
         this.options = { 0: [] } // 初始化所有下拉选择项
-        if (type === 'init') {
-          let list = this.value
-          forEachs(list, (item, i) => {
-            if (i < 2) {
-              this.getOptions(i)
-            }
-            Object.assign(this.cutDomList[i], {
-              B: i === 0 ? '1' : list[0].size + 1,
-              E: i === 0 ? item.size : i === 2 ? this.count : list[i - 1].size + 1,
-              price: countRate(this.price, item.discount),
-              discount: item.discount
-            })
+        let list = this.value || []
+        forEachs(list, (item, i) => {
+          if (i < 2) {
+            this.getOptions(i)
+          }
+          Object.assign(this.cutDomList[i], {
+            B: i === 0 ? '1' : list[0].size + 1,
+            E: i === 0 ? item.size : i === 2 ? this.count : list[i - 1].size + 1,
+            price: countRate(this.price, item.discount),
+            discount: item.discount
           })
-        } else {
-          this.getOptions(0)
-        }
-
-      }, // 初始化快捷设置
+        })
+      }, // 处理回显数据
       onPicker (e, index, list) {
         /**
          * e: event 事件
@@ -184,25 +166,32 @@
          * list: 下拉选择项列表
          */
         let val = list[e.mp.detail.value] // 获取选中的值
-        let count = this.count === '不限' ? 50 : this.count // 获取总条数
-        this.cutDomList[index].E = val // 把选中的值赋给 E
-        if (val < count && index < 2) {
-          if (this.cutDomList[index + 1]) {
-            this.cutDomList[index + 1].B = val + 1
-            this.cutDomList[index + 1].E = index === 1 ? '及以上' : ''
-            this.cutDomList = this.cutDomList.filter((item, i) => i <= index + 1)
-          } else {
-            this.cutDomList.push({
-              B: val + 1,
-              E: index === 1 ? '及以上' : '',
-              price: '',
-              discount: ''
+        let count = this.count === '不限' ? 50 : isNumber(this.count) // 获取总条数
+        let newVal = this.putValue
+        if (val < count) {
+          this.getOptions(index + 1, val + 1)
+          this.putValue[index].size = val - this.setText[`B${index}`] + 1
+          if (newVal[index + 1]) {
+            this.putValue[index + 1] = {
+              discount: '', // (number, optional): 折扣 ,
+              price: '', // (number, optional): 折扣后价格 ,
+              size: index === 1 ? this.count === '不限' ? -1 : count - this.setText[`B${index + 1}`] + 1 : null, // (integer, optional): 权益使用次数默认0 ,
+              weight: index + 1 // (integer, optional): 顺序
+            }
+            this.putValue = this.putValue.filter((m, i) => i <= index + 1)
+          } else if (index <= 1) {
+            this.putValue.push({
+              discount: '', // (number, optional): 折扣 ,
+              price: '', // (number, optional): 折扣后价格 ,
+              size: index === 1 ? this.count === '不限' ? -1 : count - this.setText[`B${index + 1}`] + 1 : null, // (integer, optional): 权益使用次数默认0 ,
+              weight: index + 2 // (integer, optional): 顺序
             })
           }
-          this.getOptions(index + 1, val + 1)
-        } else if (this.cutDomList.length - 1 > index) {
-          this.cutDomList = this.cutDomList.filter((item, i) => i <= index)
+        } else {
+          this.putValue[index].size = this.count === '不限' ? -1 : val - this.setText[`B${index}`] + 1
+          this.putValue = this.putValue.filter((m, i) => i <= index)
         }
+
       }, // 下拉选中
       getOptions (type, b) {
         let arr = []
@@ -226,48 +215,71 @@
         }
         this.options[type] = arr
       }, // 获取下拉数据
-
-      vali () {
-        let rule = {}
-        forEachs(this.newValue, (item, index) => {
-          rule[index] = {
-            type: 'object',
-            fields: {
-              discount: {
-                required: true,
-                validator: (rules, value, callback) => {
-                  if (!value && value !== 0) {
-                    callback(new Error(`方案${this.boxIndex} 的有未填写的折扣`))
-                  } else if (!OneToNine.test(value)) {
-                    callback(new Error(`方案${this.boxIndex} 的有不合理的折扣`))
-                  } else {
-                    callback()
-                  }
-                }
-              }
+      getValue () {
+        if (this.cutStatus) {
+          let list = deepClone(this.cutDomList)
+          let newList = []
+          forEachs(list, (item, i) => {
+            newList[i] = {
+              discount: item.discount, // (number, optional): 折扣 ,
+              price: item.price, // (number, optional): 折扣后价格 ,
+              size: i <= 1 ? item.E - item.B + 1 : this.count === '不限' ? -1 : this.count - item.B + 1, // (integer, optional): 权益使用次数默认0 ,
+              weight: i + 1 // (integer, optional): 顺序
             }
-          }
-        })
-        let ctx = new validate(rule)
-        return new Promise((resolve, reject) => {
-          ctx.checkForm(this.newValue).then(() => {
-            resolve(true)
-          }).catch(() => {
-            reject(false)
           })
-        })
+          return newList
+        } else {
+          return this.value
+        }
       }
     },
     components: {},
     computed: {
-      /* newValue: {
+      putValue: {
         get: function () {
           return this.value
         },
-        set: function (val) {
-          this.$emit('input', val)
+        set: function (value) {
+          console.log(value)
+
+
+          this.$emit('input', value)
         }
-      } */
+      },
+      setText () {
+        let obj = {
+          B0: 1,
+          E0: '',
+          IS0: true
+        }
+        let list = this.putValue
+        forEachs(list, (item, i) => {
+          switch (i) {
+            case 0:
+              obj[`B${i}`] = 1
+              obj[`E${i}`] = item.size ? item.size - 1 + 1 : null
+              if (item.size) {
+                obj[`B${i + 1}`] = item.size + 1
+                obj[`IS${i + 1}`] = true
+              }
+              break
+            case 1:
+              obj[`E${i}`] = item.size ? item.size + obj[`E${i - 1}`] : null
+              if (item.size) {
+                obj[`B${i + 1}`] = item.size + obj[`E${i - 1}`] + 1
+                obj[`IS${i + 1}`] = false
+              }
+              break
+            case 2:
+              obj[`E${i}`] = item.size ? item.size === -1 ? '及以上' : this.count : null
+              break
+          }
+        })
+        return obj
+      },
+      list () {
+        return this.putValue
+      }
     },
     mounted () {},
     beforeDestroy () {},
