@@ -70,7 +70,7 @@
   import uploadComponent from './../../../components/uploadfile'
   import validate from '../../../utils/validate'
   import LvEditor from './../../../components/lv_editor'
-  import { deepClone } from '../../../utils'
+  import { deepClone, forEachs } from '../../../utils'
 
   export default {
     name: 'lv_shops_box',
@@ -78,6 +78,7 @@
       return {
         queryList: {
           id: '', // (string, optional): 权益id ,
+          // shopId: '1191195686834536448', // (string, optional): 店铺id ,
           shopId: '', // (string, optional): 店铺id ,
           equityDesc: '', // (string, optional): 权益明细说明 ,
           shopPromiesIds: [], // (Array[PromiseLabelListVO], optional): 商家承诺IDs ,
@@ -104,10 +105,14 @@
       }
     },
     onLoad (query) {
-      Object.assign(this.queryList, {
-        shopId: query.shopId,
-        id: query.shopId
-      })
+      if (query.shopId) {
+        Object.assign(this.queryList, {
+          shopId: query.shopId,
+          id: query.shopId
+        })
+        this.getList(query.equityId)
+      }
+      // this.getList('1577934548363')
       this.getEquityList()
       this.initValidate()
     },
@@ -179,6 +184,19 @@
               this.Toast(res.msg)
             }
           })
+        })
+      },
+      getList (id) {
+        this.getRequest({
+          url: `/appequity/helperEquity/getEquityById/${id}`
+        }).then(res => {
+          if (res.status === 200) {
+            let list = res.t
+            let keys = ['equityDesc', 'shopPromiesIds', 'userPromiesIds', 'releaseStatus']
+            forEachs(keys, key => {
+              this.queryList[key] = list[key]
+            })
+          }
         })
       }
     },

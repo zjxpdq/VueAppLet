@@ -107,24 +107,35 @@
     },
     methods: {
       setList () {
+        let val = this.value
         let cut = this.cutStatus
         if (cut) {
           this.getOptions(0)
-          this.putValue = [
-            {
-              discount: '', // (number, optional): 折扣 ,
-              price: '', // (number, optional): 折扣后价格 ,
-              size: null, // (integer, optional): 权益使用次数默认0 ,
-              weight: 1 // (integer, optional): 顺序
+          let flag = false
+          forEachs(val, item => {
+            if (item.size > 1) {
+              flag = true
             }
-          ]
+          })
+          if (val.length > 1 && flag) {
+            this.putValue = deepClone(val)
+          } else {
+            this.putValue = [
+              {
+                discount: '', // (number, optional): 折扣 ,
+                price: '', // (number, optional): 折扣后价格 ,
+                size: null, // (integer, optional): 权益使用次数默认0 ,
+                weight: 1 // (integer, optional): 顺序
+              }
+            ]
+          }
         } else {
           let num = this.count === '不限' ? 50 : isNumber(this.count)
           let arr = []
           for (let i = 0; i < num; i++) {
             arr.push({
-              discount: '', // (number, optional): 折扣 ,
-              price: '', // (number, optional): 折扣后价格 ,
+              discount: val[i] ? val[i].discount : '', // (number, optional): 折扣 ,
+              price: val[i] ? val[i].price : '', // (number, optional): 折扣后价格 ,
               size: 1, // (integer, optional): 权益使用次数默认0 ,
               weight: i + 1 // (integer, optional): 顺序
             })

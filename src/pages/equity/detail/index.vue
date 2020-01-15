@@ -169,7 +169,7 @@
 <script>
   import LvSpeed from './../../../components/speed'
   import vigor from './vigor'
-  import { deepClone, forEachs } from '../../../utils'
+  import { deepClone, forEachs, isNumber } from '../../../utils'
   import schema from 'async-validator'
 
   export default {
@@ -274,10 +274,14 @@
         list.push(i)
       }
       this.options.countList = list
-      Object.assign(this.queryList, {
-        shopId: query.shopId,
-        id: query.shopId
-      })
+      if (query.shopId) {
+        Object.assign(this.queryList, {
+          shopId: query.shopId,
+          id: query.shopId
+        })
+        this.getList(query.equityId)
+      }
+     // this.getList('1577934548363')
     },
     watch: {
       queryList: {
@@ -320,37 +324,6 @@
           }
         })
       }, // 验证
-
-      submit () {
-        if (this.getNext) {
-          let params = deepClone(this.queryList)
-          params.equityDetailDTOS = params.equityDetailDTOS.map(item => {
-            this.$delete(item, 'cut')
-            this.$delete(item, 'openLimit')
-            item.activityTime = item.activityTime.date && item.activityTime.time ?
-              `${item.activityTime.date} ${item.activityTime.time}` : ''
-            item.size = `${item.sizeObject.one}${item.sizeObject.two}${item.sizeObject.three}次`
-            return item
-          })
-          this.postRequest({
-            url: '/appequity/helperEquity/addEquityTwo',
-            data: params
-          }).then(res => {
-            if (res.status === 200) {
-              wx.navigateTo({ url: `../license/main?shopId=${this.queryList.companyId}` })
-            } else {
-              this.Toast(res.msg)
-            }
-          })
-        } else {
-          forEachs(this.msg, item => {
-            if (!item.type) {
-              this.Toast(item.message)
-              return false
-            }
-          })
-        }
-      },
       onPicker (e, type, index) {
         switch (type) {
           case 'day':
@@ -434,7 +407,80 @@
             console.log(this.queryList.equityDetailDTOS[index][type])
             break
         }
-      } // 快捷切换
+      }, // 快捷切换
+      submit () {
+        if (this.getNext) {
+          let params = deepClone(this.queryList)
+          params.equityDetailDTOS = params.equityDetailDTOS.map(item => {
+            this.$delete(item, 'cut')
+            this.$delete(item, 'openLimit')
+            item.activityTime = item.activityTime.date && item.activityTime.time ?
+              `${item.activityTime.date} ${item.activityTime.time}` : ''
+            item.size = `${item.sizeObject.one}${item.sizeObject.two}${item.sizeObject.three}次`
+            item.equityCountDTOS = item.equityCountDTOS.map((child, i) => {
+              return {
+                discount: isNumber(child.discount),
+                price: isNumber(child.price),
+                size: isNumber(child.size),
+                weight: i + 1
+              }
+            })
+            return item
+          })
+          this.postRequest({
+            url: '/appequity/helperEquity/addEquityTwo',
+            data: params
+          }).then(res => {
+            if (res.status === 200) {
+              wx.navigateTo({ url: `../license/main?shopId=${this.queryList.companyId}` })
+            } else {
+              this.Toast(res.msg)
+            }
+          })
+        } else {
+          forEachs(this.msg, item => {
+            if (!item.type) {
+              this.Toast(item.message)
+              return false
+            }
+          })
+        }
+      },
+      getList (id) {
+        this.getRequest({
+          url: `/appequity/helperEquity/getEquityById/${id}`
+        }).then(res => {
+          if (res.status === 200) {
+            let list = res.t.equityDetailDTOS
+            if (list.length > 0) {
+              let arr = []
+              forEachs(list, (item) => {
+                let obj = deepClone(item)
+                obj.openLimit = false
+                if (obj.activityTime) {
+                  let t = obj.activityTime.split(' ')
+                  obj.activityTime = { date: t[0], time: t[1] }
+                } else {
+                  obj.activityTime = {}
+                }
+                let flag = false
+                obj.cut = false
+                forEachs(item.equityCountDTOS, child => {
+                  if (child.size > 1) {
+                    flag = true
+                    return false
+                  }
+                })
+                if (flag) {
+                  obj.cut = true
+                }
+                arr.push(obj)
+              })
+              this.queryList.equityDetailDTOS = deepClone(arr)
+            }
+          }
+        })
+      }
     },
     components: {
       LvSpeed,

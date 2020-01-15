@@ -88,6 +88,7 @@
   import LvSpeed from './../../../components/speed'
   import uploadComponent from './../../../components/uploadfile'
   import validate from '../../../utils/validate'
+  import { forEachs } from '../../../utils'
 
   export default {
     name: 'lv_shops_box',
@@ -107,10 +108,14 @@
       }
     },
     onLoad (query) {
-      Object.assign(this.queryList, {
-        shopId: query.shopId,
-        id: query.shopId
-      })
+      if (query.shopId) {
+        Object.assign(this.queryList, {
+          shopId: query.shopId,
+          id: query.shopId
+        })
+        this.getList(query.equityId)
+      }
+      // this.getList('1577934548363')
       this.initValidate()
     },
     created () {
@@ -210,6 +215,26 @@
               this.Toast(res.msg)
             }
           })
+        })
+      },
+      getList (id) {
+        this.getRequest({
+          url: `/appequity/helperEquity/getEquityById/${id}`
+        }).then(res => {
+          if (res.status === 200) {
+            let list = res.t
+            let keys = [
+              'equityImage',
+              'equityTitle',
+              'existPrice',
+              'price',
+              'levelPrice',
+              'expectPrice'
+            ]
+            forEachs(keys, item => {
+              this.queryList[item] = list[item]
+            })
+          }
         })
       }
     },
