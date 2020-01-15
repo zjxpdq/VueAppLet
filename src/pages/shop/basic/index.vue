@@ -93,7 +93,7 @@
         this.getList(query.shopId)
       }
       this.getShopType()
-      this.getList('1210370501906530304')
+      // this.getList('1210370501906530304')
       this.initValidate()
     },
     created () {
@@ -168,7 +168,7 @@
                 this.product_desc = ''
               }
               if (res.t.location) {
-                let lat = res.t.location.split(',')
+               /* let lat = res.t.location.split(',')
                 console.log(lat)
                 wx.chooseLocation({
                   latitude: lat[0],
@@ -178,7 +178,7 @@
                       ess.store_street = res.name
                     }
                   }
-                })
+                }) */
               }
             })
           }

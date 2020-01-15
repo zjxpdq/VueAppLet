@@ -219,11 +219,15 @@
       }
     },
     onLoad (query) {
-      Object.assign(this.queryList, {
-        companyId: query.shopId,
-        id: query.shopId
-      })
+      if (query.shopId) {
+        Object.assign(this.queryList, {
+          companyId: query.shopId,
+          id: query.shopId
+        })
+        this.getList(query.shopId)
+      }
       this.getIntList()
+      // this.getList('1210370501906530304')
       this.initValidate()
     },
     created () {
@@ -385,7 +389,25 @@
             }
           })
         })
-      }
+      },
+      getList (id) {
+        this.getRequest({
+          url: `/appequity/helperShop/echoQyShopTwo/${id}`
+        }).then(res => {
+          if (res.status === 200) {
+            let list = res.t
+            list.time = list.time.split(',')
+            Object.assign(this.queryList, list)
+            this.$nextTick(() => {
+              this.BTime = list.time[0]
+              this.ETime = list.time[1]
+              if (list.workDateList && list.workDateList.length > 0) {
+                this.daysText = list.workDateList.map(item => item.name).join('，')
+              }
+            })
+          }
+        })
+      } // 获取回显数据
     },
     components: {
       uploadComponent,

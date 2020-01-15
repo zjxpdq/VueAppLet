@@ -60,15 +60,14 @@
           c()
         }
       }
-
       return {
         queryList: {
           busImage: '', // (string, optional): 营业执照照片 ,
-          companyId: '', // (string, optional): 企业id ,
+          companyId: '1210370501906530304', // (string, optional): 企业id ,
           companyName: '', // (string, optional): 企业名称 ,
           qyCode: '', // (string, optional): 统一社会信用代码 ,
           rate: '', // (string, optional): 服务费率 ,
-          shopId: '' // (string, optional): 店铺id
+          shopId: '1210370501906530304' // (string, optional): 店铺id
         },
         rule: {
           busImage: { required: true, message: '营业执照照片是必须的' },
@@ -82,10 +81,14 @@
       }
     },
     onLoad (query) {
-      Object.assign(this.queryList, {
-        companyId: query.shopId,
-        shopId: query.shopId
-      })
+      if (query.shopId) {
+        Object.assign(this.queryList, {
+          companyId: query.shopId,
+          id: query.shopId
+        })
+        this.getList(query.shopId)
+      }
+      // this.getList('1210370501906530304')
       this.initValidate()
     },
     created () {
@@ -131,7 +134,20 @@
             }
           })
         })
-      }
+      },
+      getList (id) {
+        this.getRequest({
+          url: `/appequity/helperShop/echoQyShopThree/${id}`
+        }).then(res => {
+          if (res.status === 200) {
+            let list = res.t
+            Object.assign(this.queryList, list)
+            this.$nextTick(() => {
+              this.ratedText = list.rate
+            })
+          }
+        })
+      } // 获取回显数据
     },
     components: {
       uploadComponent,
