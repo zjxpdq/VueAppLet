@@ -12,7 +12,10 @@
           <div class="lv_promise_box">
             <div class="lv_promise_center" v-for="(item, index) of promiseList[0]" :key="index">
               <div class="lv_p_title">{{item.name}}</div>
-              <div class="lv_p_text">{{item.subName}}</div>
+              <div class="lv_p_text">
+                {{item.subName}}
+                <i class="lv_del_icon" @click="delData('list', index)" v-if="!!!item.id"></i>
+              </div>
             </div>
             <div class="lv_promise_add">
               <div class="lv_p_add_input" v-if="add">
@@ -20,11 +23,16 @@
                   <input type="text" v-model="exitPromise.name" placeholder="承诺标题"/>
                 </div>
                 <div class="lv_input lv_p_add_text">
-                  <input type="text" v-model="exitPromise.subName" placeholder="请输入承诺描述"/>
+                  <input
+                    type="text"
+                    v-model="exitPromise.subName"
+                    placeholder="请输入承诺描述"
+                    @blur="addData('new')"
+                  />
                   <i class="lv_del_icon" @click="delData('add')"></i>
                 </div>
               </div>
-              <div class="lv_p_add_btn" v-if="promiseList[0] && promiseList[0].length < 6" @click="addData">
+              <div class="lv_p_add_btn" v-if="promiseList[0] && promiseList[0].length < 5" @click="addData('open')">
                 <i class="lv_min_add_icon"></i>
                 自定义添加承诺
               </div>
@@ -38,8 +46,20 @@
             </div>
           </div>
           <div class="lv_title">上架时间</div>
+          <radio-group class="radio-group" @change="radioChange">
+            <radio
+              class="radio"
+              color="#118cfd"
+              v-for="(item, index) of radio"
+              :key="index"
+              :value="item.value"
+              :checked="queryList.releaseStatus === item.value"
+            >
+              <text>{{item.name}}</text>
+            </radio>
+          </radio-group>
         </div>
-        <div :class="['lv_footer_next_btn', {'lv_pitch_on': !!getNext}]" @click="submit">下一步</div>
+        <div :class="['lv_footer_next_btn', {'lv_pitch_on': !!getNext}]" @click="submit">完成</div>
       </view>
     </view>
   </view>
@@ -50,6 +70,7 @@
   import uploadComponent from './../../../components/uploadfile'
   import validate from '../../../utils/validate'
   import LvEditor from './../../../components/lv_editor'
+  import { deepClone } from '../../../utils'
 
   export default {
     name: 'lv_shops_box',
@@ -59,9 +80,9 @@
           id: '', // (string, optional): 权益id ,
           shopId: '', // (string, optional): 店铺id ,
           equityDesc: '', // (string, optional): 权益明细说明 ,
-          shopPromiesIds: '', // (Array[PromiseLabelListVO], optional): 商家承诺IDs ,
-          userPromiesIds: '', // (Array[PromiseLabelListVO], optional): 用户承诺IDs
-          releaseStatus: '' // (integer, optional): 上架时间 0立即上架 1放入仓库商家手动上架 ,
+          shopPromiesIds: [], // (Array[PromiseLabelListVO], optional): 商家承诺IDs ,
+          userPromiesIds: [], // (Array[PromiseLabelListVO], optional): 用户承诺IDs
+          releaseStatus: 0 // (integer, optional): 上架时间 0立即上架 1放入仓库商家手动上架 ,
         },
         promise: [[], []],
         add: null,
@@ -69,13 +90,23 @@
           name: '',
           subName: ''
         },
+        radio: [
+          {
+            name: '立即上架',
+            value: 0
+          },
+          {
+            name: '放入仓库，商家手动上架',
+            value: 1
+          }
+        ],
         WxValidate: null
       }
     },
     onLoad (query) {
       Object.assign(this.queryList, {
-        shopId: query.shopId || '1210370501906530304',
-        id: query.shopId || '1210370501906530304'
+        shopId: query.shopId,
+        id: query.shopId
       })
       this.getEquityList()
       this.initValidate()
@@ -93,108 +124,54 @@
           }
         })
       },
-      addData () {
-        this.add = true
+      addData (type) {
+        switch (type) {
+          case 'open':
+            this.add = true
+            break
+          case 'new':
+            if (this.exitPromise.name && this.exitPromise.subName) {
+              this.promise[0].push(this.exitPromise)
+              this.add = false
+              this.exitPromise = {
+                name: '',
+                subName: ''
+              }
+            } else {
+              this.Toast('承诺标题或承诺描述不能为空！')
+            }
+            break
+        }
       },
-      delData (type) {
-        console.log(type)
+      delData (type, index) {
         switch (type) {
           case 'add':
             this.add = false
             this.exitPromise = { name: '', subName: '' }
             break
           case 'list':
+            this.promise[0].splice(index, 1)
             break
         }
       },
-
-      getStoreEntrancePic (data) {
-        this.queryList.equityImage = data.fileurl
+      radioChange (e) {
+        this.queryList.releaseStatus = e.mp.detail.value
       },
-      putAre (val) {
-        this.queryList.expectPrice = null
-        this.queryList.levelPrice = null
-        this.queryList.price = null
-        this.queryList.existPrice = val
-      }, // 切换是 否
       initValidate () {
         this.WxValidate = new validate({
-          equityImage: { required: true, message: '权益图片是必须的' },
-          equityTitle: { required: true, message: '权益名称是必须的' },
-          price: {
-            required: true,
-            validator: (rule, value, callback) => {
-              switch (this.queryList.existPrice) {
-                case 0:
-                  if (!value) {
-                    callback(new Error('商品原价是必须的'))
-                  } else if (!/^(?!0+(?:\.0+)?$)(?:[1-9]\d*|0)(?:\.\d{1,2})?$/.test(value)) {
-                    callback(new Error('请输入正整数，可以保留两位小数'))
-                  } else if (value < 1) {
-                    callback(new Error('金额不能低于1元'))
-                  } else if (!/^([1-9][\d]{0,5})(\.[\d]{1,2})?$/.test(value)) {
-                    callback(new Error('输入金额不能超过999999.99元'))
-                  } else {
-                    callback()
-                  }
-                  break
-                case 1:
-                  if (value && !/^-?\d+\.?\d{0,2}$/.test(value)) {
-                    callback(new Error('最低消费金额必须是数字，最多可带两位小数'))
-                  } else {
-                    callback()
-                  }
-                  break
-              }
-            }
-          },
-          levelPrice: {
-            validator: (rule, value, callback) => {
-              switch (this.queryList.existPrice) {
-                case 0:
-                  if (value && !/^-?\d+\.?\d{0,2}$/.test(value)) {
-                    callback(new Error('其他平台竞价必须是数字，最多可带两位小数'))
-                  } else {
-                    callback()
-                  }
-                  break
-                case 1:
-                  if (value && !/^[1-9](\.\d{1})?$/.test(value)) {
-                    callback(new Error('请输入合理的其它平台最低折扣'))
-                  } else {
-                    callback()
-                  }
-                  break
-              }
-            }
-          },
-          expectPrice: {
-            validator: (rule, value, callback) => {
-              switch (this.queryList.existPrice) {
-                case 0:
-                  if (value && !/^-?\d+\.?\d{0,2}$/.test(value)) {
-                    callback(new Error('期望平均价格必须是数字，最多可带两位小数'))
-                  } else {
-                    callback()
-                  }
-                  break
-                case 1:
-                  if (value && !/^[1-9](\.\d{1})?$/.test(value)) {
-                    callback(new Error('请输入合理的期望平均折扣'))
-                  } else {
-                    callback()
-                  }
-                  break
-              }
-            }
-          }
+          equityDesc: { required: true, message: '权益详情是必须的' },
+          shopPromiesIds: { required: true, type: 'array', message: '商家承诺是必须的' },
+          userPromiesIds: { required: true, type: 'array', message: '用户承诺是必须的' }
         })
       },
       submit () {
-        this.WxValidate.checkForm(this.queryList).then(() => {
+        let params = deepClone(this.queryList)
+        params.shopPromiesIds = this.promise[0]
+        params.userPromiesIds = this.promise[1]
+        this.WxValidate.checkForm(params).then(() => {
           this.postRequest({
-            url: '/appequity/helperEquity/addEquityOne',
-            data: this.queryList
+            url: '/appequity/helperEquity/AddEquityThree',
+            data: params
           }).then(res => {
             if (res.status === 200) {
               wx.navigateTo({ url: `../detail/main?shopId=${this.queryList.companyId}` })
@@ -203,11 +180,7 @@
             }
           })
         })
-      },
-      changeEditor (e) {
-        console.log(e)
-      },
-      format () {}
+      }
     },
     components: {
       uploadComponent,
@@ -216,7 +189,10 @@
     },
     computed: {
       getNext () {
-        return this.WxValidate.ext(this.queryList)
+        let params = deepClone(this.queryList)
+        params.shopPromiesIds = this.promise[0]
+        params.userPromiesIds = this.promise[1]
+        return this.WxValidate.ext(params)
       },
       promiseList () {
         return this.promise
@@ -271,7 +247,18 @@
           }
 
           .lv_p_text {
+            position: relative;
+            flex: 1;
 
+            .lv_del_icon {
+              position: absolute;
+              top: unit(4, rpx);
+              right: 0;
+              display: inline-block;
+              width: unit(32, rpx);
+              height: unit(32, rpx);
+              z-index: 99;
+            }
           }
         }
 
@@ -299,7 +286,6 @@
                 z-index: 99;
               }
             }
-
           }
 
           .lv_p_add_btn {
@@ -314,6 +300,16 @@
             border: 1px solid rgba(232, 232, 232, 1);
             border-radius: unit(8, rpx);
           }
+        }
+      }
+
+      .radio-group {
+        padding: unit(24, rpx) 0;
+
+        .radio {
+          display: block;
+          padding-bottom: unit(24, rpx);
+          font-size: unit(28, rpx);
         }
       }
     }

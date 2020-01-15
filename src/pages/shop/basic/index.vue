@@ -53,16 +53,16 @@
     data () {
       return {
         queryList: {
+          name: '', // (string): 店铺名称 ,
+          shopTypeId: '', // (string): 行业id
           province: '', // (string): 省份id ,
           area: '', // (string): 区id ,
           city: '', // (string): 城市id ,
-          companyId: '1210370501906530304', // (string, optional): 企业id ,
+          companyId: '', // (string, optional): 企业id ,
           detailAddress: '', // (string): 详细地址 ,
           id: '', // (string, optional): 店铺id ,
           location: '', // (string, optional): 详细地址经纬度 ,
-          name: '', // (string): 店铺名称 ,
-          addressMarks: '', // (string, optional): 位置备注 ,
-          shopTypeId: '' // (string): 行业id
+          addressMarks: '' // (string, optional): 位置备注 ,
         },
         rule: {
           name: { required: true, message: '店铺名称必须的' }, // (string): 店铺名称 ,
@@ -85,11 +85,15 @@
       }
     },
     onLoad (query) {
-      Object.assign(this.queryList, {
-        companyId: query.shopId,
-        id: query.shopId
-      })
+      if (query.shopId) {
+        Object.assign(this.queryList, {
+          companyId: query.shopId,
+          id: query.shopId
+        })
+        this.getList(query.shopId)
+      }
       this.getShopType()
+      this.getList('1210370501906530304')
       this.initValidate()
     },
     created () {
@@ -149,7 +153,37 @@
             }
           })
         })
-      }
+      },
+      getList (id) {
+        this.getRequest({
+          url: `/appequity/helperShop/echoQyShopOne/${id}`
+        }).then(res => {
+          if (res.status === 200) {
+            Object.assign(this.queryList, res.t)
+            this.$nextTick(() => {
+              try {
+                this.product_desc = this.indList.list.filter(item => item.id === res.t.shopTypeId)[0].name
+              } catch (e) {
+                console.log(e)
+                this.product_desc = ''
+              }
+              if (res.t.location) {
+                let lat = res.t.location.split(',')
+                console.log(lat)
+                wx.chooseLocation({
+                  latitude: lat[0],
+                  longitude: lat[1],
+                  success: ess => {
+                    if (ess.errMsg === 'chooseLocation:ok') {
+                      ess.store_street = res.name
+                    }
+                  }
+                })
+              }
+            })
+          }
+        })
+      } // 获取回显数据
     },
     components: {
       LvSpeed
