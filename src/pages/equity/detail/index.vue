@@ -221,7 +221,7 @@
           medalLevel: ['纳税A级企业专属优惠（暂未开放）'],
           medalLevelText: { 1: '纳税A级企业专属优惠（暂未开放）' }
         },
-        price: 100, // 商品原价
+        price: null, // 商品原价
         rule: new schema({
           sizeObject: {
             type: 'object',
