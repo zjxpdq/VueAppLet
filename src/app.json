@@ -1,14 +1,15 @@
 {
   "pages": [
-    "pages/QRPage/main",
-    "pages/equity/detail/main",
     "pages/equity/basic/main",
+    "pages/equity/detail/main",
     "pages/equity/license/main",
     "pages/equity/success/main",
     "pages/shop/license/main",
     "pages/shop/basic/main",
     "pages/shop/detail/main",
     "pages/shop/success/main",
+    "pages/QRPage1/main",
+    "pages/QRPage/main",
 
     "pages/index/main",
     "pages/logs/main",
